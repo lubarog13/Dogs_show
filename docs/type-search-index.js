@@ -1,1 +1,1 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html","k":"18"},{"p":"org.example.ui","l":"DogsTableForm"},{"p":"org.example","l":"Main"}];updateSearchResults();
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html","k":"18"},{"p":"org.example.ui","l":"DogsTableForm"},{"p":"org.example.utils","l":"EmptySearchInput","k":"13"},{"p":"org.example","l":"Main"},{"p":"org.example.utils","l":"NoResults","k":"13"}];updateSearchResults();

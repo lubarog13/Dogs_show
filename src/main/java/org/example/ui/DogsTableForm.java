@@ -10,10 +10,14 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import org.example.utils.NoResults;
+import org.example.utils.EmptySearchInput;
 
 /**
  * Класс формы
@@ -117,9 +121,30 @@ public class DogsTableForm extends JFrame {
      */
     private void initListeners() {
         // Слушатели для кнопок
-        searchBtn.addActionListener(e -> applyFilters());
+        searchBtn.addActionListener(e -> {
+            try {
+                if (searchField.getText().equals("Введите текст....") || searchField.getText().isEmpty()) {
+                    throw new EmptySearchInput();
+                }
+                applyFilters();
+            } catch (EmptySearchInput err) {
+                // Если введен пустой поисковый запрос, выводим сообщение об ошибке
+                JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
+            }
+            catch (NoResults err) {
+                // Если не найдено ничего, выводим сообщение об ошибке
+                JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
+            }
+        });
         clearButton.addActionListener(e -> resetFilters());
-        applyButton.addActionListener(e -> applyFilters());
+        applyButton.addActionListener(e -> {
+            try {
+                applyFilters();
+            } catch (NoResults err) {
+                // Если не найдено ничего, выводим сообщение об ошибке
+                JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
+            }
+        });
 
         // Слушатель
         //  для слайдера
@@ -149,7 +174,20 @@ public class DogsTableForm extends JFrame {
             @Override
             public void keyTyped(KeyEvent e) {
                 if (e.getKeyChar() == KeyEvent.VK_ENTER) {
-                    applyFilters();
+                    try {
+                        if (searchField.getText().equals("Введите текст....") || searchField.getText().isEmpty()) {
+                            throw new EmptySearchInput();
+                        }
+                        applyFilters();
+                    }
+                    catch (EmptySearchInput err) {
+                        // Если введен пустой поисковый запрос, выводим сообщение об ошибке
+                        JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
+                    }
+                     catch (NoResults err) {
+                        // Если не найдено ничего, выводим сообщение об ошибке
+                        JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
+                    }
                 }
             }
 
@@ -171,13 +209,19 @@ public class DogsTableForm extends JFrame {
         dogBreedBox.setSelectedIndex(0);
         judgeBox.setSelectedIndex(0);
         placeSlider.setValue(placeSlider.getMaximum());
-        applyFilters();
+        try {
+            applyFilters();
+        } catch (NoResults err) {
+            // Ничего не делаем
+        }
     }
+
 
     /**
      * Применение фильтров
+     * @throws NoResults
      */
-    private void applyFilters() {
+    private void applyFilters() throws NoResults {
         // Получение данных из полей
         String searchText = searchField.getText().toLowerCase();
         String breed = (String) dogBreedBox.getSelectedItem();
@@ -185,8 +229,7 @@ public class DogsTableForm extends JFrame {
         int place = placeSlider.getValue();
 
         // Фильтрация данных
-        String[][] filteredData = new String[data.length][];
-        int i = 0;
+        List<String[]> filteredData = new ArrayList<>();
         for (String[] row : data) {
             if (!judge.equals("Все судьи") && !judge.equals(row[4])) {
                 continue;
@@ -200,12 +243,16 @@ public class DogsTableForm extends JFrame {
             if (!searchText.isEmpty() && !searchText.equals("введите текст....") && !Objects.equals(row[0], searchText.trim()) && !row[1].toLowerCase().contains(searchText) && !row[2].toLowerCase().contains(searchText) && !row[3].toLowerCase().contains(searchText) && !row[4].toLowerCase().contains(searchText)) {
                 continue;
             }
-            filteredData[i] = row;
-            i++;
+            filteredData.add(row);
+        }
+
+        if (filteredData.isEmpty()) {
+            model.setDataVector(new String[0][], columns);
+            throw new NoResults();
         }
 
         // Заполнение модели данными
-        model.setDataVector(filteredData, columns);
+        model.setDataVector(filteredData.toArray(new String[0][]), columns);
 
     }
 
