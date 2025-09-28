@@ -3,19 +3,17 @@ package org.example.ui;
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
+import java.util.*;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
+
+import org.example.utils.FileWorker;
 import org.example.utils.NoResults;
 import org.example.utils.EmptySearchInput;
 
@@ -35,6 +33,8 @@ public class DogsTableForm extends JFrame {
     private JButton applyButton;
     private JButton clearButton;
     private JLabel placeLabel;
+    private JButton loadButton;
+    private JButton downloadButton;
     private DefaultTableModel model;
 
     // Данные для теста и заполнения таблицы
@@ -44,6 +44,7 @@ public class DogsTableForm extends JFrame {
             {"3", "Шарик", "Немецкая овчарка", "Сергей Сидоров", "Сергей Петров", "3"},
             {"4", "Бобик", "Доберман", "Алексей Петров", "Алексей Сидоров", "4"},
             {"5", "Кнопка", "Такса", "Николай Николаев", "Сергей Петров", "1"}};
+    private List<String[]> filteredData = new ArrayList<>(Arrays.asList(data));
 
     // Заголовок окна
     public static String APP_TITLE = "Выставка собак";
@@ -130,8 +131,7 @@ public class DogsTableForm extends JFrame {
             } catch (EmptySearchInput err) {
                 // Если введен пустой поисковый запрос, выводим сообщение об ошибке
                 JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
-            }
-            catch (NoResults err) {
+            } catch (NoResults err) {
                 // Если не найдено ничего, выводим сообщение об ошибке
                 JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
             }
@@ -145,6 +145,9 @@ public class DogsTableForm extends JFrame {
                 JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
             }
         });
+
+        loadButton.addActionListener(e -> loadDataFromFile());
+        downloadButton.addActionListener(e -> downloadDataToFile());
 
         // Слушатель
         //  для слайдера
@@ -179,12 +182,10 @@ public class DogsTableForm extends JFrame {
                             throw new EmptySearchInput();
                         }
                         applyFilters();
-                    }
-                    catch (EmptySearchInput err) {
+                    } catch (EmptySearchInput err) {
                         // Если введен пустой поисковый запрос, выводим сообщение об ошибке
                         JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
-                    }
-                     catch (NoResults err) {
+                    } catch (NoResults err) {
                         // Если не найдено ничего, выводим сообщение об ошибке
                         JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
                     }
@@ -219,6 +220,7 @@ public class DogsTableForm extends JFrame {
 
     /**
      * Применение фильтров
+     *
      * @throws NoResults
      */
     private void applyFilters() throws NoResults {
@@ -248,12 +250,53 @@ public class DogsTableForm extends JFrame {
 
         if (filteredData.isEmpty()) {
             model.setDataVector(new String[0][], columns);
+            this.filteredData = new ArrayList<>();
             throw new NoResults();
         }
 
         // Заполнение модели данными
         model.setDataVector(filteredData.toArray(new String[0][]), columns);
+        this.filteredData = filteredData;
 
+    }
+
+
+    /**
+     * Метод для загрузки данных из файла
+     */
+    private void loadDataFromFile() {
+        FileDialog fileDialog = new FileDialog(this, "Выберите файл", FileDialog.LOAD);
+        fileDialog.setVisible(true);
+        String path = fileDialog.getDirectory() + fileDialog.getFile();
+        try {
+            FileWorker fileWorker = new FileWorker(path);
+            fileWorker.readDataFromFile();
+            data = fileWorker.getData().toArray(new String[0][]);
+            model.setDataVector(data, columns);
+            JOptionPane.showMessageDialog(null, "Данные из файла " + path + " успешно загружены", "Данные загружены", JOptionPane.INFORMATION_MESSAGE);
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE);
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(null, "Неверный формат данных в файле\n Требуемый формат: Номер;Кличка;Порода;ФИО владельца;Судья;Занятое место", "Внимание", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    /**
+     * Метод для сохранения данных в файл
+     */
+    private void downloadDataToFile() {
+
+        FileDialog fileDialog = new FileDialog(this, "Выберите файл", FileDialog.SAVE);
+        fileDialog.setVisible(true);
+        String path = fileDialog.getDirectory() + fileDialog.getFile();
+        FileWorker fileWorker = new FileWorker(path);
+        fileWorker.setData(filteredData);
+        try {
+            fileWorker.writeDataToFile();
+            JOptionPane.showMessageDialog(null, "Данные в файл " + path + " успешно сохранены", "Данные сохранены", JOptionPane.INFORMATION_MESSAGE);
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "Ошибка при сохранении данных в файл", "Внимание", JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     {
@@ -274,7 +317,7 @@ public class DogsTableForm extends JFrame {
         mainPanel = new JPanel();
         mainPanel.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(3, 3, new Insets(0, 0, 0, 0), -1, -1));
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(5, 1, new Insets(0, 0, 0, 0), -1, -1));
         mainPanel.add(panel1, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
         Font label1Font = this.$$$getFont$$$(null, -1, 28, label1.getFont());
@@ -325,18 +368,29 @@ public class DogsTableForm extends JFrame {
         placeLabel = new JLabel();
         placeLabel.setText("До:");
         panel4.add(placeLabel, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final com.intellij.uiDesigner.core.Spacer spacer1 = new com.intellij.uiDesigner.core.Spacer();
+        panel3.add(spacer1, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(-1, 50), null, null, 0, false));
         final JScrollPane scrollPane1 = new JScrollPane();
         panel1.add(scrollPane1, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, new Dimension(-1, 400), 0, false));
         dogsTable = new JTable();
         scrollPane1.setViewportView(dogsTable);
-        final com.intellij.uiDesigner.core.Spacer spacer1 = new com.intellij.uiDesigner.core.Spacer();
-        mainPanel.add(spacer1, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(50, 50), null, 0, false));
+        final JPanel panel5 = new JPanel();
+        panel5.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.add(panel5, new com.intellij.uiDesigner.core.GridConstraints(4, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        loadButton = new JButton();
+        loadButton.setText("Загрузить данные");
+        panel5.add(loadButton, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        downloadButton = new JButton();
+        downloadButton.setText("Скачать таблицу");
+        panel5.add(downloadButton, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final com.intellij.uiDesigner.core.Spacer spacer2 = new com.intellij.uiDesigner.core.Spacer();
-        mainPanel.add(spacer2, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        mainPanel.add(spacer2, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(50, 50), null, 0, false));
         final com.intellij.uiDesigner.core.Spacer spacer3 = new com.intellij.uiDesigner.core.Spacer();
-        mainPanel.add(spacer3, new com.intellij.uiDesigner.core.GridConstraints(1, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        mainPanel.add(spacer3, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final com.intellij.uiDesigner.core.Spacer spacer4 = new com.intellij.uiDesigner.core.Spacer();
-        mainPanel.add(spacer4, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        mainPanel.add(spacer4, new com.intellij.uiDesigner.core.GridConstraints(1, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        final com.intellij.uiDesigner.core.Spacer spacer5 = new com.intellij.uiDesigner.core.Spacer();
+        mainPanel.add(spacer5, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
     }
 
     /**
