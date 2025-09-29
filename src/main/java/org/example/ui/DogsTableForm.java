@@ -4,12 +4,18 @@ import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.StyleContext;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
+import org.xml.sax.SAXException;
+
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -270,13 +276,21 @@ public class DogsTableForm extends JFrame {
         String path = fileDialog.getDirectory() + fileDialog.getFile();
         try {
             FileWorker fileWorker = new FileWorker(path);
-            fileWorker.readDataFromFile();
+            fileWorker.parseXMLData();
             data = fileWorker.getData().toArray(new String[0][]);
             model.setDataVector(data, columns);
             JOptionPane.showMessageDialog(null, "Данные из файла " + path + " успешно загружены", "Данные загружены", JOptionPane.INFORMATION_MESSAGE);
-        } catch (FileNotFoundException e) {
+        } 
+        catch (FileNotFoundException  e ) {
             JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE);
-        } catch (IllegalArgumentException e) {
+        } 
+        catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE);
+        }
+        catch (SAXException e) {
+            JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE);
+        }
+        catch (IllegalArgumentException | ParserConfigurationException e) {
             JOptionPane.showMessageDialog(null, "Неверный формат данных в файле\n Требуемый формат: Номер;Кличка;Порода;ФИО владельца;Судья;Занятое место", "Внимание", JOptionPane.WARNING_MESSAGE);
         }
     }
@@ -292,9 +306,12 @@ public class DogsTableForm extends JFrame {
         FileWorker fileWorker = new FileWorker(path);
         fileWorker.setData(filteredData);
         try {
-            fileWorker.writeDataToFile();
+            fileWorker.writeXMLData();
             JOptionPane.showMessageDialog(null, "Данные в файл " + path + " успешно сохранены", "Данные сохранены", JOptionPane.INFORMATION_MESSAGE);
         } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "Ошибка при сохранении данных в файл", "Внимание", JOptionPane.WARNING_MESSAGE);
+        }
+        catch (ParserConfigurationException | SAXException | IOException | TransformerException e) {
             JOptionPane.showMessageDialog(null, "Ошибка при сохранении данных в файл", "Внимание", JOptionPane.WARNING_MESSAGE);
         }
     }
