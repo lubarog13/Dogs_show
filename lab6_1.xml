@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<dogs>
+    <dog>
+        <number>1</number>
+        <name>Собака 1</name>
+        <breed>Китайская хохлатая</breed>
+        <owner>Хозяйка 1</owner>
+        <judge>Главный судья 1</judge>
+        <place>1</place>
+    </dog>
+    <dog>
+        <number>2</number>
+        <name>Собака 2</name>
+        <breed>Такса</breed>
+        <owner>Хозяйка 2</owner>
+        <judge>Главный судья 2</judge>
+        <place>2</place>
+    </dog>
+    <dog>
+        <number>3</number>
+        <name>Собака 3</name>
+        <breed>Питбуль</breed>
+        <owner>Хозяйка 3</owner>
+        <judge>Главный судья 3</judge>
+        <place>3</place>
+    </dog>
+    <dog>
+        <number>4</number>
+        <name>Собака 4</name>
+        <breed>Доберман</breed>
+        <owner>Хозяйка 4</owner>
+        <judge>Главный судья 4</judge>
+        <place>4</place>
+    </dog>
+    <dog>
+        <number>5</number>
+        <name>Собака 5</name>
+        <breed>Пудель</breed>
+        <owner>Хозяйка 5</owner>
+        <judge>Главный судья 5</judge>
+        <place>1</place>
+    </dog>
+    <dog>
+        <number>6</number>
+        <name>Собака 6</name>
+        <breed>Немецкая овчарка</breed>
+        <owner>Хозяйка 6</owner>
+        <judge>Главный судья 6</judge>
+        <place>2</place>
+    </dog>
+    <dog>
+        <number>7</number>
+        <name>Собака 7</name>
+        <breed>Русская псовая борзая</breed>
+        <owner>Хозяйка 7</owner>
+        <judge>Главный судья 7</judge>
+        <place>3</place>
+    </dog>
+    <dog>
+        <number>8</number>
+        <name>Собака 8</name>
+        <breed>Дворняжка</breed>
+        <owner>Хозяйка 8</owner>
+        <judge>Главный судья 8</judge>
+        <place>4</place>
+    </dog>
+</dogs>

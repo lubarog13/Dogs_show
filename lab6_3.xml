@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<dogs>
+    <dog>
+        <number>1</number>
+        <name>Собака 1</name>
+        <breed>Китайская хохлатая</breed>
+        <owner>Хозяйка 1</owner>
+        <judge>Главный судья 1</judge>
+        <place>1</place>
+    </dog>
+    <dog>
+        <number>5</number>
+        <name>Собака 5</name>
+        <breed>Пудель</breed>
+        <owner>Хозяйка 5</owner>
+        <judge>Главный судья 5</judge>
+        <place>1</place>
+    </dog>
+</dogs>

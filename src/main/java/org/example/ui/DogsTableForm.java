@@ -7,6 +7,7 @@ import javax.swing.text.StyleContext;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import org.example.utils.Logger;
 import org.xml.sax.SAXException;
 
 import java.awt.*;
@@ -14,10 +15,11 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.example.utils.FileWorker;
 import org.example.utils.NoResults;
@@ -110,6 +112,8 @@ public class DogsTableForm extends JFrame {
             judges.add(row[4]);
             places.add(row[5]);
         }
+        dogBreedBox.removeAllItems();
+        judgeBox.removeAllItems();
         dogBreedBox.addItem("Все породы");
         judgeBox.addItem("Все судьи");
         dogBreedBox.setSelectedIndex(0);
@@ -266,7 +270,6 @@ public class DogsTableForm extends JFrame {
 
     }
 
-
     /**
      * Метод для загрузки данных из файла
      */
@@ -274,24 +277,71 @@ public class DogsTableForm extends JFrame {
         FileDialog fileDialog = new FileDialog(this, "Выберите файл", FileDialog.LOAD);
         fileDialog.setVisible(true);
         String path = fileDialog.getDirectory() + fileDialog.getFile();
-        try {
-            FileWorker fileWorker = new FileWorker(path);
-            fileWorker.parseXMLData();
-            data = fileWorker.getData().toArray(new String[0][]);
-            model.setDataVector(data, columns);
-            JOptionPane.showMessageDialog(null, "Данные из файла " + path + " успешно загружены", "Данные загружены", JOptionPane.INFORMATION_MESSAGE);
-        } 
-        catch (FileNotFoundException  e ) {
-            JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE);
-        } 
-        catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE);
-        }
-        catch (SAXException e) {
-            JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE);
-        }
-        catch (IllegalArgumentException | ParserConfigurationException e) {
-            JOptionPane.showMessageDialog(null, "Неверный формат данных в файле\n Требуемый формат: Номер;Кличка;Порода;ФИО владельца;Судья;Занятое место", "Внимание", JOptionPane.WARNING_MESSAGE);
+        if (!path.equals("nullnull")) {
+            Object mutex = new Object();
+            Thread[] threads = new Thread[2];
+            AtomicBoolean loaded = new AtomicBoolean(false);
+            AtomicBoolean loadedError = new AtomicBoolean(false);
+            threads[0] = new Thread(() -> {
+                synchronized (mutex) {
+                    try {
+                        FileWorker fileWorker = new FileWorker(path);
+                        fileWorker.parseXMLData();
+                        data = fileWorker.getData().toArray(new String[0][]);
+                        model.setDataVector(data, columns);
+                        setFilters();
+                        loaded.set(true);
+                        mutex.notifyAll();
+                    } catch (IOException | SAXException e) {
+                        loadedError.set(true);
+                        SwingUtilities.invokeLater(() ->
+                                JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE)
+                        );
+                        mutex.notifyAll();
+                    } catch (IllegalArgumentException | ParserConfigurationException e) {
+                        SwingUtilities.invokeLater(() ->
+                                JOptionPane.showMessageDialog(null, "Неверный формат данных в файле\n Требуется XML файл", "Внимание", JOptionPane.WARNING_MESSAGE)
+                        );
+                        loadedError.set(true);
+                        mutex.notifyAll();
+                    }
+                }
+                if (loaded.get()) {
+                    SwingUtilities.invokeLater(() ->
+                            JOptionPane.showMessageDialog(null, "Данные из файла " + path + " успешно загружены", "Данные загружены", JOptionPane.INFORMATION_MESSAGE)
+                    );
+                }
+
+
+            });
+            threads[1] = new Thread(() -> {
+                synchronized (mutex) {
+                    Logger.log("Загружаю данные из файла " + path);
+                    while (!loaded.get() && !loadedError.get()) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (loadedError.get()) {
+                        Logger.log("Ошибка при загрузке данных из файла " + path);
+                        mutex.notifyAll();
+                    } else {
+                        Logger.log("Данные из файла " + path + " успешно загружены");
+                        mutex.notifyAll();
+                    }
+                }
+            });
+            threads[1].setPriority(Thread.MIN_PRIORITY);
+            threads[0].start();
+            threads[1].start();
+            try {
+                threads[0].join();
+                threads[1].join();
+            } catch (InterruptedException e) {
+                JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE);
+            }
         }
     }
 
@@ -303,18 +353,62 @@ public class DogsTableForm extends JFrame {
         FileDialog fileDialog = new FileDialog(this, "Выберите файл", FileDialog.SAVE);
         fileDialog.setVisible(true);
         String path = fileDialog.getDirectory() + fileDialog.getFile();
-        FileWorker fileWorker = new FileWorker(path);
-        fileWorker.setData(filteredData);
-        try {
-            fileWorker.writeXMLData();
-            JOptionPane.showMessageDialog(null, "Данные в файл " + path + " успешно сохранены", "Данные сохранены", JOptionPane.INFORMATION_MESSAGE);
-        } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "Ошибка при сохранении данных в файл", "Внимание", JOptionPane.WARNING_MESSAGE);
+        if (path.equals("nullnull")) {
+            return;
         }
-        catch (ParserConfigurationException | SAXException | IOException | TransformerException e) {
-            JOptionPane.showMessageDialog(null, "Ошибка при сохранении данных в файл", "Внимание", JOptionPane.WARNING_MESSAGE);
+        Object mutex = new Object();
+            Thread[] threads = new Thread[2];
+            AtomicBoolean loaded = new AtomicBoolean(false);
+            AtomicBoolean loadedError = new AtomicBoolean(false);
+            threads[0] = new Thread(() -> {
+                synchronized (mutex) {
+                    try {
+                        FileWorker fileWorker = new FileWorker(path);
+                        fileWorker.setData(filteredData);
+                        fileWorker.writeXMLData();
+                        loaded.set(true);
+                        mutex.notifyAll();
+                        SwingUtilities.invokeLater(() ->
+                                JOptionPane.showMessageDialog(null, "Данные в файл " + path + " успешно сохранены", "Данные сохранены", JOptionPane.INFORMATION_MESSAGE)
+                        );
+                    } catch (ParserConfigurationException | SAXException | IOException | TransformerException e) {
+                        loadedError.set(true);
+                        mutex.notifyAll();
+                        SwingUtilities.invokeLater(() ->
+                                JOptionPane.showMessageDialog(null, "Ошибка при сохранении данных в файл", "Внимание", JOptionPane.WARNING_MESSAGE)
+                        );
+                    }
+                }
+            });
+            threads[1] = new Thread(() -> {
+                synchronized (mutex) {
+                    Logger.log("Сохраняю данные в файл " + path);
+                    while (!loaded.get() && !loadedError.get()) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (loadedError.get()) {
+                        Logger.log("Ошибка при сохранении данных в файл " + path);
+                        mutex.notifyAll();
+                    } else {
+                        Logger.log("Данные в файл " + path + " успешно сохранены");
+                        mutex.notifyAll();
+                    }
+                }
+            });
+            threads[1].setPriority(Thread.MIN_PRIORITY);
+            threads[0].start();
+            threads[1].start();
+            try {
+                threads[0].join();
+                threads[1].join();
+            } catch (InterruptedException e) {
+                JOptionPane.showMessageDialog(null, "Ошибка при сохранении данных в файл", "Внимание", JOptionPane.WARNING_MESSAGE);
+            }
         }
-    }
 
     {
 // GUI initializer generated by IntelliJ IDEA GUI Designer

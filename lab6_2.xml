@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<dogs>
+    <dog>
+        <number>1</number>
+        <name>Тяпка</name>
+        <breed>Русская псовая борзая</breed>
+        <owner>Иван Иванов</owner>
+        <judge>Иван Сусанин</judge>
+        <place>1</place>
+    </dog>
+    <dog>
+        <number>2</number>
+        <name>Барбос</name>
+        <breed>Такса</breed>
+        <owner>Петр Петров</owner>
+        <judge>Григорий Васильев</judge>
+        <place>2</place>
+    </dog>
+    <dog>
+        <number>3</number>
+        <name>Шарик</name>
+        <breed>Немецкая овчарка</breed>
+        <owner>Сергей Сидоров</owner>
+        <judge>Сергей Петров</judge>
+        <place>3</place>
+    </dog>
+    <dog>
+        <number>4</number>
+        <name>Бобик</name>
+        <breed>Доберман</breed>
+        <owner>Алексей Петров</owner>
+        <judge>Алексей Сидоров</judge>
+        <place>4</place>
+    </dog>
+    <dog>
+        <number>5</number>
+        <name>Кнопка</name>
+        <breed>Такса</breed>
+        <owner>Николай Николаев</owner>
+        <judge>Сергей Петров</judge>
+        <place>1</place>
+    </dog>
+</dogs>

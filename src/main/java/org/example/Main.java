@@ -1,11 +1,14 @@
 package org.example;
 import org.example.ui.DogsTableForm;
 import javax.swing.*;
-
+import org.example.utils.Logger;
 /**
  * Главный класс программы, вызов окна формы
  */
 public class Main {
+
+    public static String LOG_PATH = "/tmp/log_dogs.txt";
+    public static Logger logger = new Logger(LOG_PATH);
 
     /**
      * @param args

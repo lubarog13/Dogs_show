@@ -91,12 +91,8 @@ public class FileWorker {
      */
 
     public void parseXMLData() throws ParserConfigurationException, SAXException, IOException {
-            // Создание парсера документа
             DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document doc = dBuilder.newDocument();
-            // Чтение документа из файла
-            doc = dBuilder.parse(new File(path));
-            // Нормализация документа
+            Document doc = dBuilder.parse(new File(path));
             doc.getDocumentElement().normalize();
             NodeList nodeList = doc.getElementsByTagName("dog");
             data = new ArrayList<>();
