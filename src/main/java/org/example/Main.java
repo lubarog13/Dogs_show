@@ -1,6 +1,10 @@
 package org.example;
+import org.example.ui.CompetitionAddForm;
+import org.example.ui.DogAddForm;
 import org.example.ui.DogsTableForm;
 import javax.swing.*;
+
+import org.example.ui.PersonAddForm;
 import org.example.utils.Logger;
 /**
  * Главный класс программы, вызов окна формы
@@ -21,6 +25,6 @@ public class Main {
                 e.printStackTrace();
             }
 
-            new DogsTableForm(700, 500);
+            new CompetitionAddForm();
         }
 }
