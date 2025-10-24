@@ -6,12 +6,15 @@ import com.intellij.uiDesigner.core.Spacer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.example.model.Person;
 import org.example.model.Dog;
 import org.example.utils.BaseEditForm;
+import org.example.utils.DbManager;
+
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -62,9 +65,12 @@ public class DogAddForm extends BaseEditForm {
     }
 
     private void initOwners() {
-        owners.add(new Person(1, "Иванов", "Иван", "Иванович", "owner"));
-        owners.add(new Person(2, "Петров", "Петр", "Петрович", "owner"));
-        owners.add(new Person(3, "Сидоров", "Сидор", "Сидорович", "owner"));
+        try {
+            owners = DbManager.getOwners();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при загрузке владельцев: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
         ownerBox.removeAllItems();
         owners.forEach(owner -> ownerBox.addItem(owner.toString()));
     }
@@ -104,12 +110,33 @@ public class DogAddForm extends BaseEditForm {
 
     @Override
     protected void saveClick() {
-
+        try {
+            this.dog.setName(nameField.getText());
+            this.dog.setBreed(breedField.getText());
+            this.dog.setOwner(this.owner);
+            if (this.dog.getId() == 0) {
+                DbManager.addDog(this.dog);
+            } else {
+                DbManager.updateDog(this.dog);
+            }
+            JOptionPane.showMessageDialog(null, "Собака успешно добавлена", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при добавлении собаки: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     @Override
     protected void deleteClick() {
-
+        try {
+            DbManager.deleteDog(this.dog.getId());
+            JOptionPane.showMessageDialog(null, "Собака успешно удалена", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при удалении собаки: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     {

@@ -9,10 +9,12 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.example.model.Competition;
 import org.example.model.Dog;
 import org.example.utils.BaseEditForm;
 import org.example.model.Person;
-
+import org.example.utils.DbManager;
+import java.sql.SQLException;   
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.StyleContext;
@@ -69,10 +71,13 @@ public class CompetitionAddForm extends BaseEditForm {
         setVisible(true);
     }
 
-    private void initJudges() {
-        judges.add(new Person(1, "Иванов", "Иван", "Иванович", "judge"));
-        judges.add(new Person(2, "Петров", "Петр", "Петрович", "judge"));
-        judges.add(new Person(3, "Сидоров", "Сидор", "Сидорович", "judge"));
+        private void initJudges() {
+        try {
+            judges = DbManager.getJudges();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при загрузке судей: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
         judgeBox.removeAllItems();
         judges.forEach(judge -> judgeBox.addItem(judge.toString()));
         judgeBox.addActionListener(new ActionListener() {
@@ -84,11 +89,12 @@ public class CompetitionAddForm extends BaseEditForm {
     }
 
     private void initDogs() {
-        dogs.add(new Dog(1, "Тяпка", "Русская псовая борзая", new Person(1, "Иванов", "Иван", "Иванович", "owner")));
-        dogs.add(new Dog(2, "Барбос", "Такса", new Person(2, "Петров", "Петр", "Петрович", "owner")));
-        dogs.add(new Dog(3, "Шарик", "Немецкая овчарка", new Person(3, "Сидоров", "Сидор", "Сидорович", "owner")));
-        dogs.add(new Dog(4, "Бобик", "Доберман", new Person(1, "Иванов", "Иван", "Иванович", "owner")));
-        dogs.add(new Dog(5, "Кнопка", "Такса", new Person(2, "Петров", "Петр", "Петрович", "owner")));
+        try {
+            dogs = DbManager.getDogs();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при загрузке собак: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
         dogBox.removeAllItems();
         dogs.forEach(dog -> dogBox.addItem(dog.toString()));
         dogBox.addActionListener(new ActionListener() {
@@ -142,12 +148,29 @@ public class CompetitionAddForm extends BaseEditForm {
 
     @Override
     protected void saveClick() {
-
+        try {
+            this.place = (int) placeSpinner.getValue();
+            if (this.id == 0) {
+                DbManager.addCompetition(new Competition(0, this.place, this.dog.getId(), this.judge.getId(), this.dog.getName(), this.dog.getBreed(), this.dog.getOwner().getName() + " " + this.dog.getOwner().getSurname() + " " + this.dog.getOwner().getMiddlename(), this.judge.getName() + " " + this.judge.getSurname() + " " + this.judge.getMiddlename()));
+            } else {
+                DbManager.updateCompetition(new Competition(this.id, this.place, this.dog.getId(), this.judge.getId(), this.dog.getName(), this.dog.getBreed(), this.dog.getOwner().getName() + " " + this.dog.getOwner().getSurname() + " " + this.dog.getOwner().getMiddlename(), this.judge.getName() + " " + this.judge.getSurname() + " " + this.judge.getMiddlename()));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при сохранении соревнования: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     @Override
     protected void deleteClick() {
-
+        try {
+            DbManager.deleteCompetition(this.id);
+            JOptionPane.showMessageDialog(null, "Соревнование успешно удалено", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при удалении соревнования: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     {

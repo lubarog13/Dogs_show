@@ -5,12 +5,13 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import org.example.utils.BaseEditForm;
 import org.example.model.Person;
+import org.example.utils.DbManager;
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.util.Locale;
-
+import java.sql.SQLException;
 public class PersonAddForm extends BaseEditForm {
     private JPanel panel1;
     private JLabel titleLabel;
@@ -66,12 +67,45 @@ public class PersonAddForm extends BaseEditForm {
 
     @Override
     protected void saveClick() {
-
+        try {
+            this.person.setSurname(surnameField.getText());
+            this.person.setName(nameField.getText());
+            this.person.setMiddlename(middlenameField.getText());
+            if (this.person.getId() == 0) {
+                if (this.person.getType().equals("owner")) {
+                    DbManager.addOwner(this.person);
+                } else {
+                    DbManager.addJudge(this.person);
+                }
+            } else {
+                if (this.person.getType().equals("owner")) {
+                    DbManager.updateOwner(this.person);
+                } else {
+                    DbManager.updateJudge(this.person);
+                }
+            }
+            JOptionPane.showMessageDialog(null, "Данные успешно сохранены", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при сохранении данных: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     @Override
     protected void deleteClick() {
-
+        try {
+            if (this.person.getType().equals("owner")) {
+                DbManager.deleteOwner(this.person.getId());
+            } else {
+                DbManager.deleteJudge(this.person.getId());
+            }
+            JOptionPane.showMessageDialog(null, "Данные успешно удалены", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при удалении данных: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     {

@@ -10,6 +10,10 @@ import javax.xml.transform.TransformerException;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import org.example.model.Dog;
+import org.example.model.Person;
+
+import org.example.model.Competition;
 import org.example.utils.*;
 import org.xml.sax.SAXException;
 
@@ -20,6 +24,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,15 +47,12 @@ public class DogsTableForm extends BaseForm {
     private JLabel placeLabel;
     private JButton loadButton;
     private JButton downloadButton;
+    private List<Competition> competitions = new ArrayList<>();
     private DefaultTableModel model;
 
     // Данные для теста и заполнения таблицы
     private String[] columns = {"Номер", "Кличка", "Порода", "ФИО владельца", "Судья", "Занятое место"};
-    private String[][] data = {{"1", "Тяпка", "Русская псовая борзая", "Иван Иванов", "Иван Сусанин", "1"},
-            {"2", "Барбос", "Такса", "Петр Петров", "Григорий Васильев", "2"},
-            {"3", "Шарик", "Немецкая овчарка", "Сергей Сидоров", "Сергей Петров", "3"},
-            {"4", "Бобик", "Доберман", "Алексей Петров", "Алексей Сидоров", "4"},
-            {"5", "Кнопка", "Такса", "Николай Николаев", "Сергей Петров", "1"}};
+    private String[][] data = new String[0][];
     private List<String[]> filteredData = new ArrayList<>(Arrays.asList(data));
 
     // Заголовок окна
@@ -63,10 +65,31 @@ public class DogsTableForm extends BaseForm {
     public DogsTableForm() {
         super(700, 500, true);
         setContentPane(mainPanel);
+        initData();
         initTable();
         setFilters();
         initListeners();
         setVisible(true);
+    }
+    /**
+     * Инициализация данных
+     */
+    private void initData() {
+        try {
+            this.competitions = DbManager.getCompetitions();
+            data = new String[competitions.size()][columns.length];
+            for (int i = 0; i < competitions.size(); i++) {
+                data[i][0] = String.valueOf(competitions.get(i).getId());
+                data[i][1] = competitions.get(i).getDogName();
+                data[i][2] = competitions.get(i).getDogBreed();
+                data[i][3] = competitions.get(i).getOwnerName();
+                data[i][4] = competitions.get(i).getJudgeName();
+                data[i][5] = String.valueOf(competitions.get(i).getPlace());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при загрузке данных: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
@@ -188,6 +211,27 @@ public class DogsTableForm extends BaseForm {
 
             @Override
             public void keyReleased(KeyEvent e) {
+            }
+        });
+        // Добавляем слушатель двойного клика по строке таблицы
+        dogsTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                if (evt.getClickCount() == 2 && dogsTable.getSelectedRow() != -1) {
+                    int row = dogsTable.getSelectedRow();
+                    String[] dogData = data[row];
+                    Competition competition = competitions.stream().filter(c -> c.getId() == Integer.parseInt(dogData[0])).findFirst().orElse(null);
+                    if (competition != null) {
+                        try {
+                            Dog dog = DbManager.getDog(competition.getDogId());
+                            Person judge = DbManager.getJudge(competition.getJudgeId());
+                            new CompetitionAddForm(competition.getPlace(), dog, judge, competition.getId());
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                            JOptionPane.showMessageDialog(null, "Произошла ошибка при загрузке данных о собаке или судье: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
             }
         });
     }

@@ -31,6 +31,11 @@
             <artifactId>forms_rt</artifactId>
             <version>7.0.3</version>
         </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
+        </dependency>
     </dependencies>
 
 

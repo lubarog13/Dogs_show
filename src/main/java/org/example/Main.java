@@ -6,6 +6,10 @@ import javax.swing.*;
 
 import org.example.ui.PersonAddForm;
 import org.example.utils.Logger;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 /**
  * Главный класс программы, вызов окна формы
  */
@@ -26,5 +30,14 @@ public class Main {
             }
 
             new CompetitionAddForm();
+        }
+
+        public static Connection getConnection() {
+            try {
+                return DriverManager.getConnection("jdbc:mysql://localhost:3306/dogs_show", "root", "root");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return null;
         }
 }
