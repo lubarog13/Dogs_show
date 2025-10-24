@@ -4,9 +4,9 @@ public class Dog {
     private int id;
     private String name;
     private String breed;
-    private Owner owner;
+    private Person owner;
 
-    public Dog(int id, String name, String breed, Owner owner) {
+    public Dog(int id, String name, String breed, Person owner) {
         this.id = id;
         this.name = name;
         this.breed = breed;
@@ -25,7 +25,7 @@ public class Dog {
         return breed;
     }
 
-    public Owner getOwner() {
+    public Person getOwner() {
         return owner;
     }
 
@@ -41,7 +41,7 @@ public class Dog {
         this.breed = breed;
     }
 
-    public void setOwner(Owner owner) {
+    public void setOwner(Person owner) {
         this.owner = owner;
     }
 

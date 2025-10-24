@@ -9,8 +9,9 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.example.model.Person;
+import org.example.model.Dog;
 import org.example.utils.BaseEditForm;
-import org.example.model.Owner;
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -31,11 +32,9 @@ public class DogAddForm extends BaseEditForm {
     private JButton addOwnerBtn;
     private JButton editOwnerButton;
 
-    private String name;
-    private String breed;
-    private Owner owner;
-    private List<Owner> owners = new ArrayList<>();
-    private int id;
+    private Dog dog;
+    private Person owner;
+    private List<Person> owners = new ArrayList<>();
 
     public DogAddForm() {
         super();
@@ -43,11 +42,8 @@ public class DogAddForm extends BaseEditForm {
         baseInit();
     }
 
-    public DogAddForm(String name, String breed, Owner owner, int id) {
-        this.name = name;
-        this.breed = breed;
-        this.owner = owner;
-        this.id = id;
+    public DogAddForm(Dog dog) {
+        this.dog = dog;
         super();
         titleLabel.setText("Редактирование собаки");
         baseInit();
@@ -66,9 +62,9 @@ public class DogAddForm extends BaseEditForm {
     }
 
     private void initOwners() {
-        owners.add(new Owner(1, "Иванов", "Иван", "Иванович"));
-        owners.add(new Owner(2, "Петров", "Петр", "Петрович"));
-        owners.add(new Owner(3, "Сидоров", "Сидор", "Сидорович"));
+        owners.add(new Person(1, "Иванов", "Иван", "Иванович", "owner"));
+        owners.add(new Person(2, "Петров", "Петр", "Петрович", "owner"));
+        owners.add(new Person(3, "Сидоров", "Сидор", "Сидорович", "owner"));
         ownerBox.removeAllItems();
         owners.forEach(owner -> ownerBox.addItem(owner.toString()));
     }
@@ -76,17 +72,17 @@ public class DogAddForm extends BaseEditForm {
     @Override
     protected void initFields() {
         initOwners();
-        if (this.name != null) {
-            nameField.setText(this.name);
+        if (this.dog.getName() != null) {
+            nameField.setText(this.dog.getName());
         }
-        if (this.breed != null) {
-            breedField.setText(this.breed);
+        if (this.dog.getBreed() != null) {
+            breedField.setText(this.dog.getBreed());
         }
-        if (this.owner != null) {
-            ownerBox.setSelectedItem(this.owner.toString());
+        if (this.dog.getOwner() != null) {
+            ownerBox.setSelectedItem(this.dog.getOwner().toString());
         } else {
-            this.owner = owners.get(0);
-            ownerBox.setSelectedItem(this.owner.toString());
+            this.dog.setOwner(owners.get(0));
+            ownerBox.setSelectedItem(this.dog.getOwner().toString());
         }
         ownerBox.addActionListener(new ActionListener() {
             @Override
@@ -103,7 +99,7 @@ public class DogAddForm extends BaseEditForm {
     }
 
     private void editOwner() {
-        new PersonAddForm("owner", this.owner.getSurname(), this.owner.getName(), this.owner.getMiddlename(), this.owner.getId());
+        new PersonAddForm(this.owner);
     }
 
     @Override

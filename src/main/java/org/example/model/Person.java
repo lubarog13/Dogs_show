@@ -1,29 +1,30 @@
 package org.example.model;
 
-public class Owner {
-
+public class Person {
     private int id;
-    private String surname;
     private String name;
+    private String surname;
     private String middlename;
+    private String type;
 
-    public Owner(int id, String surname, String name, String middlename) {
+    public Person(int id, String name, String surname, String middlename, String type) {
         this.id = id;
-        this.surname = surname;
         this.name = name;
+        this.surname = surname;
         this.middlename = middlename;
+        this.type = type;
     }
 
     public int getId() {
         return id;
     }
 
-    public String getSurname() {
-        return surname;
-    }
-
     public String getName() {
         return name;
+    }
+    
+    public String getSurname() {
+        return surname;
     }
 
     public String getMiddlename() {
@@ -34,12 +35,12 @@ public class Owner {
         this.id = id;
     }
 
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
-
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
     }
 
     public void setMiddlename(String middlename) {
@@ -48,5 +49,13 @@ public class Owner {
 
     public String toString() {
         return surname + " " + name + " " + middlename;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

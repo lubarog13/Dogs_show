@@ -4,7 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import org.example.utils.BaseEditForm;
-
+import org.example.model.Person;
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.StyleContext;
@@ -22,27 +22,19 @@ public class PersonAddForm extends BaseEditForm {
     private JButton deleteButton;
     private JButton cancelButton;
 
-    private String surname;
-    private String name;
-    private String middlename;
-    private String type;
-    private int id;
+    private Person person;
     public PersonAddForm(String type) {
         super();
         setContentPane(panel1);
-        this.type = type;
+        this.person = new Person(0, "", "", "", type);
         titleLabel.setText("Добавление " + (type.equals("owner") ? "владельца" : "судьи"));
         baseInit();
     }
 
-    public PersonAddForm(String type, String surname, String name, String middlename, int id) {
-        this.type = type;
-        this.surname = surname;
-        this.name = name;
-        this.middlename = middlename;
-        this.id = id;
+    public PersonAddForm(Person person) {
+        this.person = person;
         super();
-        titleLabel.setText("Редактирование " + (type.equals("owner") ? "владельца" : "судьи"));
+        titleLabel.setText("Редактирование " + (person.getType().equals("owner") ? "владельца" : "судьи"));
         baseInit();
     }
 
@@ -60,14 +52,14 @@ public class PersonAddForm extends BaseEditForm {
 
     @Override
     protected void initFields() {
-        if (this.surname != null) {
-            surnameField.setText(this.surname);
+        if (this.person.getSurname() != null) {
+            surnameField.setText(this.person.getSurname());
         }
-        if (this.name != null) {
-            nameField.setText(this.name);
+        if (this.person.getName() != null) {
+            nameField.setText(this.person.getName());
         }
-        if (this.middlename != null) {
-            middlenameField.setText(this.middlename);
+        if (this.person.getMiddlename() != null) {
+            middlenameField.setText(this.person.getMiddlename());
         }
 
     }

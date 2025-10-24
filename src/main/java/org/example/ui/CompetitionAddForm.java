@@ -11,8 +11,7 @@ import java.util.List;
 
 import org.example.model.Dog;
 import org.example.utils.BaseEditForm;
-import org.example.model.Owner;
-import org.example.model.Judge;
+import org.example.model.Person;
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -35,12 +34,12 @@ public class CompetitionAddForm extends BaseEditForm {
     private JButton editDog;
     private JButton editJudge;
 
-    private Judge judge;
+    private Person judge;
     private Dog dog;
     private int place;
     private int id;
     private List<Dog> dogs = new ArrayList<>();
-    private List<Judge> judges = new ArrayList<>();
+    private List<Person> judges = new ArrayList<>();
 
     public CompetitionAddForm() {
         super();
@@ -48,7 +47,7 @@ public class CompetitionAddForm extends BaseEditForm {
         baseInit();
     }
 
-    public CompetitionAddForm(int place, Dog dog, Judge judge, int id) {
+    public CompetitionAddForm(int place, Dog dog, Person judge, int id) {
         this.dog = dog;
         this.judge = judge;
         this.place = place;
@@ -71,9 +70,9 @@ public class CompetitionAddForm extends BaseEditForm {
     }
 
     private void initJudges() {
-        judges.add(new Judge(1, "Иванов", "Иван", "Иванович"));
-        judges.add(new Judge(2, "Петров", "Петр", "Петрович"));
-        judges.add(new Judge(3, "Сидоров", "Сидор", "Сидорович"));
+        judges.add(new Person(1, "Иванов", "Иван", "Иванович", "judge"));
+        judges.add(new Person(2, "Петров", "Петр", "Петрович", "judge"));
+        judges.add(new Person(3, "Сидоров", "Сидор", "Сидорович", "judge"));
         judgeBox.removeAllItems();
         judges.forEach(judge -> judgeBox.addItem(judge.toString()));
         judgeBox.addActionListener(new ActionListener() {
@@ -85,11 +84,11 @@ public class CompetitionAddForm extends BaseEditForm {
     }
 
     private void initDogs() {
-        dogs.add(new Dog(1, "Тяпка", "Русская псовая борзая", new Owner(1, "Иванов", "Иван", "Иванович")));
-        dogs.add(new Dog(2, "Барбос", "Такса", new Owner(2, "Петров", "Петр", "Петрович")));
-        dogs.add(new Dog(3, "Шарик", "Немецкая овчарка", new Owner(3, "Сидоров", "Сидор", "Сидорович")));
-        dogs.add(new Dog(4, "Бобик", "Доберман", new Owner(1, "Иванов", "Иван", "Иванович")));
-        dogs.add(new Dog(5, "Кнопка", "Такса", new Owner(2, "Петров", "Петр", "Петрович")));
+        dogs.add(new Dog(1, "Тяпка", "Русская псовая борзая", new Person(1, "Иванов", "Иван", "Иванович", "owner")));
+        dogs.add(new Dog(2, "Барбос", "Такса", new Person(2, "Петров", "Петр", "Петрович", "owner")));
+        dogs.add(new Dog(3, "Шарик", "Немецкая овчарка", new Person(3, "Сидоров", "Сидор", "Сидорович", "owner")));
+        dogs.add(new Dog(4, "Бобик", "Доберман", new Person(1, "Иванов", "Иван", "Иванович", "owner")));
+        dogs.add(new Dog(5, "Кнопка", "Такса", new Person(2, "Петров", "Петр", "Петрович", "owner")));
         dogBox.removeAllItems();
         dogs.forEach(dog -> dogBox.addItem(dog.toString()));
         dogBox.addActionListener(new ActionListener() {
@@ -134,11 +133,11 @@ public class CompetitionAddForm extends BaseEditForm {
     }
 
     private void editDog() {
-        new DogAddForm(this.dog.getName(), this.dog.getBreed(), this.dog.getOwner(), this.dog.getId());
+        new DogAddForm(this.dog);
     }
 
     private void editJudge() {
-        new PersonAddForm("judge", this.judge.getSurname(), this.judge.getName(), this.judge.getMiddlename(), this.judge.getId());
+        new PersonAddForm(this.judge);
     }
 
     @Override
