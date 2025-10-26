@@ -18,11 +18,12 @@ public class DbManager {
     public static List<Competition> getCompetitions() throws SQLException {
         List<Competition> competitions = new ArrayList<>();
         try (Connection connection = Main.getConnection()) {
-            String query = "SELECT (id, place, dog_id, judge_id, dog.name, dog.breed, owner.name, owner.surname, owner.middlename, judge.name, judge.surname, judge.middlename) FROM competitions INNER JOIN dogs ON competitions.dog_id = dogs.id JOIN owners ON dogs.owner_id = owners.id JOIN judges ON competitions.judge_id = judges.id";
+            String query = "SELECT competition.id, place, dog_id, judge_id, dog.name, dog.breed, owner.name, owner.surname, owner.middlename, judges.name, judges.surname, judges.middlename FROM competition LEFT JOIN dog ON competition.dog_id = dog.id LEFT JOIN owner ON dog.owner_id = owner.id LEFT JOIN judges ON competition.judge_id = judges.id";
+            assert connection != null;
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
-                competitions.add(new Competition(resultSet.getInt("id"), resultSet.getInt("place"), resultSet.getInt("dog_id"), resultSet.getInt("judge_id"), resultSet.getString("dog.name"), resultSet.getString("dog.breed"), resultSet.getString("owner.name") + " " + resultSet.getString("owner.surname") + " " + resultSet.getString("owner.middlename"), resultSet.getString("judge.name") + " " + resultSet.getString("judge.surname") + " " + resultSet.getString("judge.middlename")));
+                competitions.add(new Competition(resultSet.getInt("id"), resultSet.getInt("place"), resultSet.getInt("dog_id"), resultSet.getInt("judge_id"), resultSet.getString("dog.name"), resultSet.getString("dog.breed"), resultSet.getString("owner.name") + " " + resultSet.getString("owner.surname") + " " + resultSet.getString("owner.middlename"), resultSet.getString("judges.name") + " " + resultSet.getString("judges.surname") + " " + resultSet.getString("judges.middlename")));
             }
             return competitions;
         }
@@ -32,6 +33,7 @@ public class DbManager {
         List<Person> judges = new ArrayList<>();
         try (Connection connection = Main.getConnection()) {
             String query = "SELECT * FROM judges";
+            assert connection != null;
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
@@ -44,7 +46,8 @@ public class DbManager {
     public static List<Person> getOwners() throws SQLException {
         List<Person> owners = new ArrayList<>();
         try (Connection connection = Main.getConnection()) {
-            String query = "SELECT * FROM owners";
+            String query = "SELECT * FROM owner";
+            assert connection != null;
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
@@ -57,7 +60,8 @@ public class DbManager {
     public static List<Dog> getDogs() throws SQLException {
         List<Dog> dogs = new ArrayList<>();
         try (Connection connection = Main.getConnection()) {
-            String query = "SELECT id, name, breed, owner.id, owner.name, owner.surname, owner.middlename FROM dogs INNER JOIN owners ON dogs.owner_id = owners.id";
+            String query = "SELECT dog.id, dog.name, breed, owner.id, owner.name, owner.surname, owner.middlename FROM dog INNER JOIN owner ON dog.owner_id = owner.id";
+            assert connection != null;
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
@@ -69,7 +73,8 @@ public class DbManager {
 
     public static Person getOwner(int id) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "SELECT * FROM owners WHERE id = ?";
+            String query = "SELECT * FROM owner WHERE id = ?";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
@@ -83,6 +88,7 @@ public class DbManager {
     public static Person getJudge(int id) throws SQLException {
         try (Connection connection = Main.getConnection()) {
             String query = "SELECT * FROM judges WHERE id = ?";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
@@ -95,7 +101,8 @@ public class DbManager {
 
     public static Dog getDog(int id) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "SELECT id, name, breed, owner.id, owner.name, owner.surname, owner.middlename FROM dogs INNER JOIN owners ON dogs.owner_id = owners.id WHERE id = ?";
+            String query = "SELECT dog.id, name, breed, owner.id, owner.name, owner.surname, owner.middlename FROM dog INNER JOIN owner ON dog.owner_id = owner.id WHERE id = ?";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
@@ -108,7 +115,8 @@ public class DbManager {
 
     public static void addDog(Dog dog) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "INSERT INTO dogs (name, breed, owner_id) VALUES (?, ?, ?)";
+            String query = "INSERT INTO dog (name, breed, owner_id) VALUES (?, ?, ?)";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, dog.getName());
             statement.setString(2, dog.getBreed());
@@ -119,7 +127,8 @@ public class DbManager {
 
     public static void addOwner(Person owner) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "INSERT INTO owners (name, surname, middlename) VALUES (?, ?, ?)";
+            String query = "INSERT INTO owner (name, surname, middlename) VALUES (?, ?, ?)";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, owner.getName());
             statement.setString(2, owner.getSurname());
@@ -131,6 +140,7 @@ public class DbManager {
     public static void addJudge(Person judge) throws SQLException {
         try (Connection connection = Main.getConnection()) {
             String query = "INSERT INTO judges (name, surname, middlename) VALUES (?, ?, ?)";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, judge.getName());
             statement.setString(2, judge.getSurname());
@@ -141,7 +151,8 @@ public class DbManager {
 
     public static void addCompetition(Competition competition) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "INSERT INTO competitions (place, dog_id, judge_id) VALUES (?, ?, ?)";
+            String query = "INSERT INTO competition (place, dog_id, judge_id) VALUES (?, ?, ?)";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, competition.getPlace());
             statement.setInt(2, competition.getDogId());
@@ -152,7 +163,8 @@ public class DbManager {
 
     public static void updateDog(Dog dog) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "UPDATE dogs SET name = ?, breed = ?, owner_id = ? WHERE id = ?";
+            String query = "UPDATE dog SET name = ?, breed = ?, owner_id = ? WHERE id = ?";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, dog.getName());
             statement.setString(2, dog.getBreed());
@@ -164,7 +176,8 @@ public class DbManager {
 
     public static void updateOwner(Person owner) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "UPDATE owners SET name = ?, surname = ?, middlename = ? WHERE id = ?";
+            String query = "UPDATE owner SET name = ?, surname = ?, middlename = ? WHERE id = ?";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, owner.getName());
             statement.setString(2, owner.getSurname());
@@ -177,6 +190,7 @@ public class DbManager {
     public static void updateJudge(Person judge) throws SQLException {
         try (Connection connection = Main.getConnection()) {
             String query = "UPDATE judges SET name = ?, surname = ?, middlename = ? WHERE id = ?";
+            assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, judge.getName());
             statement.setString(2, judge.getSurname());
@@ -188,7 +202,7 @@ public class DbManager {
 
     public static void updateCompetition(Competition competition) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "UPDATE competitions SET place = ?, dog_id = ?, judge_id = ? WHERE id = ?";
+            String query = "UPDATE competition SET place = ?, dog_id = ?, judge_id = ? WHERE id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, competition.getPlace());
             statement.setInt(2, competition.getDogId());
@@ -200,7 +214,7 @@ public class DbManager {
 
     public static void deleteDog(int id) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "DELETE FROM dogs WHERE id = ?";
+            String query = "DELETE FROM dog WHERE id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             int rowsAffected = statement.executeUpdate();
@@ -212,7 +226,7 @@ public class DbManager {
 
     public static void deleteOwner(int id) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "DELETE FROM owners WHERE id = ?";
+            String query = "DELETE FROM owner WHERE id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             int rowsAffected = statement.executeUpdate();
@@ -236,7 +250,7 @@ public class DbManager {
 
     public static void deleteCompetition(int id) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "DELETE FROM competitions WHERE id = ?";
+            String query = "DELETE FROM competition WHERE id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             int rowsAffected = statement.executeUpdate();

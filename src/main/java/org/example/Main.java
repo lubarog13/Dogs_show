@@ -29,12 +29,12 @@ public class Main {
                 e.printStackTrace();
             }
 
-            new CompetitionAddForm();
+            new DogsTableForm();
         }
 
         public static Connection getConnection() {
             try {
-                return DriverManager.getConnection("jdbc:mysql://localhost:3306/dogs_show", "root", "root");
+                return DriverManager.getConnection("jdbc:mysql://localhost:3306/dogs_show", "new_cybrid", "1234");
             } catch (SQLException e) {
                 e.printStackTrace();
             }

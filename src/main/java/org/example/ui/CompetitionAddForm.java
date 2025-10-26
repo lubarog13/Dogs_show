@@ -71,7 +71,7 @@ public class CompetitionAddForm extends BaseEditForm {
         setVisible(true);
     }
 
-        private void initJudges() {
+    private void initJudges() {
         try {
             judges = DbManager.getJudges();
         } catch (SQLException e) {
@@ -114,14 +114,14 @@ public class CompetitionAddForm extends BaseEditForm {
         }
         if (this.dog != null) {
             dogBox.setSelectedItem(this.dog.toString());
-        } else {
-            this.dog = dogs.get(0);
+        } else if (!dogs.isEmpty()) {
+            this.dog = dogs.getFirst();
             dogBox.setSelectedItem(this.dog.toString());
         }
         if (this.judge != null) {
             judgeBox.setSelectedItem(this.judge.toString());
-        } else {
-            this.judge = judges.get(0);
+        } else if (!judges.isEmpty()) {
+            this.judge = judges.getFirst();
             judgeBox.setSelectedItem(this.judge.toString());
         }
         addJudgeBtn.addActionListener(e -> addJudge());

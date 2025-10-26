@@ -18,10 +18,7 @@ import org.example.utils.*;
 import org.xml.sax.SAXException;
 
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
@@ -71,6 +68,7 @@ public class DogsTableForm extends BaseForm {
         initListeners();
         setVisible(true);
     }
+
     /**
      * Инициализация данных
      */
@@ -214,9 +212,9 @@ public class DogsTableForm extends BaseForm {
             }
         });
         // Добавляем слушатель двойного клика по строке таблицы
-        dogsTable.addMouseListener(new java.awt.event.MouseAdapter() {
+        dogsTable.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            public void mouseClicked(MouseEvent evt) {
                 if (evt.getClickCount() == 2 && dogsTable.getSelectedRow() != -1) {
                     int row = dogsTable.getSelectedRow();
                     String[] dogData = data[row];

@@ -78,16 +78,16 @@ public class DogAddForm extends BaseEditForm {
     @Override
     protected void initFields() {
         initOwners();
-        if (this.dog.getName() != null) {
+        if (this.dog != null && this.dog.getName() != null) {
             nameField.setText(this.dog.getName());
         }
-        if (this.dog.getBreed() != null) {
+        if (this.dog != null && this.dog.getBreed() != null) {
             breedField.setText(this.dog.getBreed());
         }
-        if (this.dog.getOwner() != null) {
+        if (this.dog != null && this.dog.getOwner() != null) {
             ownerBox.setSelectedItem(this.dog.getOwner().toString());
-        } else {
-            this.dog.setOwner(owners.get(0));
+        } else if (this.dog != null && !owners.isEmpty()) {
+            this.dog.setOwner(owners.getFirst());
             ownerBox.setSelectedItem(this.dog.getOwner().toString());
         }
         ownerBox.addActionListener(new ActionListener() {

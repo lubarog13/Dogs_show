@@ -53,13 +53,13 @@ public class PersonAddForm extends BaseEditForm {
 
     @Override
     protected void initFields() {
-        if (this.person.getSurname() != null) {
+        if (this.person != null && this.person.getSurname() != null) {
             surnameField.setText(this.person.getSurname());
         }
-        if (this.person.getName() != null) {
+        if (this.person != null && this.person.getName() != null) {
             nameField.setText(this.person.getName());
         }
-        if (this.person.getMiddlename() != null) {
+        if (this.person != null && this.person.getMiddlename() != null) {
             middlenameField.setText(this.person.getMiddlename());
         }
 
