@@ -1,19 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <dogs>
     <dog>
-        <number>1</number>
-        <name>Собака 1</name>
-        <breed>Китайская хохлатая</breed>
-        <owner>Хозяйка 1</owner>
-        <judge>Главный судья 1</judge>
+        <id>1</id>
+        <dog_id>1</dog_id>
+        <name>Тяпка</name>
+        <breed>Такса2</breed>
+        <owner_id>1</owner_id>
+        <judge_id>1</judge_id>
+        <owner_name>Иван Иванов Иванович</owner_name>
+        <judge_name>Степан Степанов Степанович</judge_name>
         <place>1</place>
     </dog>
     <dog>
-        <number>5</number>
-        <name>Собака 5</name>
-        <breed>Пудель</breed>
-        <owner>Хозяйка 5</owner>
-        <judge>Главный судья 5</judge>
+        <id>2</id>
+        <dog_id>1</dog_id>
+        <name>Тяпка</name>
+        <breed>Такса2</breed>
+        <owner_id>1</owner_id>
+        <judge_id>1</judge_id>
+        <owner_name>Иван Иванов Иванович</owner_name>
+        <judge_name>Степан Степанов Степанович</judge_name>
         <place>1</place>
     </dog>
 </dogs>

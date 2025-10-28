@@ -16,6 +16,10 @@ public abstract class BaseEditForm extends BaseForm{
         cancelButton.addActionListener(e -> cancelClick());
     }
 
+    public void reload() {
+
+    }
+
     abstract protected void baseInit();
     abstract protected void initFields();
     abstract protected void saveClick();

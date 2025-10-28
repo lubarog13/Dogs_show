@@ -48,7 +48,7 @@ public class Person {
     }
 
     public String toString() {
-        return surname + " " + name + " " + middlename;
+        return "[" + id + "] " + surname + " " + name + " " + middlename;
     }
 
     public String getType() {

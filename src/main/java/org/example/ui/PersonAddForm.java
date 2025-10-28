@@ -22,17 +22,20 @@ public class PersonAddForm extends BaseEditForm {
     private JButton saveButton;
     private JButton deleteButton;
     private JButton cancelButton;
+    private BaseEditForm baseEditForm;
 
     private Person person;
-    public PersonAddForm(String type) {
+    public PersonAddForm(String type, BaseEditForm baseEditForm) {
+        this.baseEditForm = baseEditForm;
         super();
-        setContentPane(panel1);
         this.person = new Person(0, "", "", "", type);
+        setContentPane(panel1);
         titleLabel.setText("Добавление " + (type.equals("owner") ? "владельца" : "судьи"));
         baseInit();
     }
 
-    public PersonAddForm(Person person) {
+    public PersonAddForm(Person person, BaseEditForm baseEditForm) {
+        this.baseEditForm = baseEditForm;
         this.person = person;
         super();
         titleLabel.setText("Редактирование " + (person.getType().equals("owner") ? "владельца" : "судьи"));
@@ -84,6 +87,7 @@ public class PersonAddForm extends BaseEditForm {
                     DbManager.updateJudge(this.person);
                 }
             }
+            baseEditForm.reload();
             JOptionPane.showMessageDialog(null, "Данные успешно сохранены", "Успешно", JOptionPane.INFORMATION_MESSAGE);
             dispose();
         } catch (SQLException e) {
@@ -96,11 +100,20 @@ public class PersonAddForm extends BaseEditForm {
     protected void deleteClick() {
         try {
             if (this.person.getType().equals("owner")) {
+                if (DbManager.haveDogsForOwner(this.person.getId())) {
+                    JOptionPane.showMessageDialog(null, "Невозможно удалить владельца, так как у него есть собаки", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 DbManager.deleteOwner(this.person.getId());
             } else {
+                if (DbManager.haveCompetitionsForJudge(this.person.getId())) {
+                    JOptionPane.showMessageDialog(null, "Невозможно удалить судью, так как он участвует в соревнованиях", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 DbManager.deleteJudge(this.person.getId());
             }
             JOptionPane.showMessageDialog(null, "Данные успешно удалены", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+            baseEditForm.reload();
             dispose();
         } catch (SQLException e) {
             e.printStackTrace();

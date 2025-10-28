@@ -18,12 +18,12 @@ public class DbManager {
     public static List<Competition> getCompetitions() throws SQLException {
         List<Competition> competitions = new ArrayList<>();
         try (Connection connection = Main.getConnection()) {
-            String query = "SELECT competition.id, place, dog_id, judge_id, dog.name, dog.breed, owner.name, owner.surname, owner.middlename, judges.name, judges.surname, judges.middlename FROM competition LEFT JOIN dog ON competition.dog_id = dog.id LEFT JOIN owner ON dog.owner_id = owner.id LEFT JOIN judges ON competition.judge_id = judges.id";
+            String query = "SELECT competition.id, place, dog_id, judge_id, owner_id, dog.name, dog.breed, owner.name, owner.surname, owner.middlename, judges.name, judges.surname, judges.middlename FROM competition LEFT JOIN dog ON competition.dog_id = dog.id LEFT JOIN owner ON dog.owner_id = owner.id LEFT JOIN judges ON competition.judge_id = judges.id";
             assert connection != null;
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             while (resultSet.next()) {
-                competitions.add(new Competition(resultSet.getInt("id"), resultSet.getInt("place"), resultSet.getInt("dog_id"), resultSet.getInt("judge_id"), resultSet.getString("dog.name"), resultSet.getString("dog.breed"), resultSet.getString("owner.name") + " " + resultSet.getString("owner.surname") + " " + resultSet.getString("owner.middlename"), resultSet.getString("judges.name") + " " + resultSet.getString("judges.surname") + " " + resultSet.getString("judges.middlename")));
+                competitions.add(new Competition(resultSet.getInt("id"), resultSet.getInt("place"), resultSet.getInt("dog_id"), resultSet.getInt("judge_id"), resultSet.getInt("owner_id"), resultSet.getString("dog.name"), resultSet.getString("dog.breed"), resultSet.getString("owner.name") + " " + resultSet.getString("owner.surname") + " " + resultSet.getString("owner.middlename"), resultSet.getString("judges.name") + " " + resultSet.getString("judges.surname") + " " + resultSet.getString("judges.middlename")));
             }
             return competitions;
         }
@@ -101,13 +101,13 @@ public class DbManager {
 
     public static Dog getDog(int id) throws SQLException {
         try (Connection connection = Main.getConnection()) {
-            String query = "SELECT dog.id, name, breed, owner.id, owner.name, owner.surname, owner.middlename FROM dog INNER JOIN owner ON dog.owner_id = owner.id WHERE id = ?";
+            String query = "SELECT dog.id, dog.name, breed, owner.id, owner.name, owner.surname, owner.middlename FROM dog INNER JOIN owner ON dog.owner_id = owner.id WHERE dog.id = ?";
             assert connection != null;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                return new Dog(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getString("breed"), new Person(resultSet.getInt("owner.id"), resultSet.getString("owner.name"), resultSet.getString("owner.surname"), resultSet.getString("owner.middlename"), "owner"));
+                return new Dog(resultSet.getInt("dog.id"), resultSet.getString("dog.name"), resultSet.getString("breed"), new Person(resultSet.getInt("owner.id"), resultSet.getString("owner.name"), resultSet.getString("owner.surname"), resultSet.getString("owner.middlename"), "owner"));
             }
             return null;
         }
@@ -212,6 +212,29 @@ public class DbManager {
         }
     }
 
+    public static boolean haveCompetitionsForDog(int dogId) throws SQLException {
+        try (Connection connection = Main.getConnection()) {
+            String query = "SELECT COUNT(*) FROM competition WHERE dog_id = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, dogId);
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            return resultSet.getInt("COUNT(*)") > 0;
+        }
+    }
+
+    public static boolean haveCompetitionsForJudge(int judgeId) throws SQLException {
+        try (Connection connection = Main.getConnection()) {
+            String query = "SELECT COUNT(*) FROM competition WHERE judge_id = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, judgeId);
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            return resultSet.getInt("COUNT(*)") > 0;
+        }
+    }
+
+
     public static void deleteDog(int id) throws SQLException {
         try (Connection connection = Main.getConnection()) {
             String query = "DELETE FROM dog WHERE id = ?";
@@ -223,6 +246,17 @@ public class DbManager {
             }
         }
     }   
+
+    public static boolean haveDogsForOwner(int ownerId) throws SQLException {
+        try (Connection connection = Main.getConnection()) {
+            String query = "SELECT COUNT(*) FROM dog WHERE owner_id = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, ownerId);
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            return resultSet.getInt("COUNT(*)") > 0;
+        }
+    }
 
     public static void deleteOwner(int id) throws SQLException {
         try (Connection connection = Main.getConnection()) {
@@ -259,4 +293,6 @@ public class DbManager {
             }
         }
     }
+
+    
 }

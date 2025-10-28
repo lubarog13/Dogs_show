@@ -10,6 +10,7 @@ import javax.xml.transform.TransformerException;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import org.example.Main;
 import org.example.model.Dog;
 import org.example.model.Person;
 
@@ -20,7 +21,6 @@ import org.xml.sax.SAXException;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
@@ -44,11 +44,12 @@ public class DogsTableForm extends BaseForm {
     private JLabel placeLabel;
     private JButton loadButton;
     private JButton downloadButton;
+    private JButton addCompetitionButton;
     private List<Competition> competitions = new ArrayList<>();
     private DefaultTableModel model;
 
     // Данные для теста и заполнения таблицы
-    private String[] columns = {"Номер", "Кличка", "Порода", "ФИО владельца", "Судья", "Занятое место"};
+    private String[] columns = {"Номер", "ID собаки", "Кличка", "Порода", "ID владельца", "ID судьи", "ФИО владельца", "ФИО судьи", "Занятое место"};
     private String[][] data = new String[0][];
     private List<String[]> filteredData = new ArrayList<>(Arrays.asList(data));
 
@@ -78,12 +79,16 @@ public class DogsTableForm extends BaseForm {
             data = new String[competitions.size()][columns.length];
             for (int i = 0; i < competitions.size(); i++) {
                 data[i][0] = String.valueOf(competitions.get(i).getId());
-                data[i][1] = competitions.get(i).getDogName();
-                data[i][2] = competitions.get(i).getDogBreed();
-                data[i][3] = competitions.get(i).getOwnerName();
-                data[i][4] = competitions.get(i).getJudgeName();
-                data[i][5] = String.valueOf(competitions.get(i).getPlace());
+                data[i][1] = String.valueOf(competitions.get(i).getDogId());
+                data[i][2] = competitions.get(i).getDogName();
+                data[i][3] = competitions.get(i).getDogBreed();
+                data[i][4] = String.valueOf(competitions.get(i).getOwnerId());
+                data[i][5] = String.valueOf(competitions.get(i).getJudgeId());
+                data[i][6] = competitions.get(i).getOwnerName();
+                data[i][7] = competitions.get(i).getJudgeName();
+                data[i][8] = String.valueOf(competitions.get(i).getPlace());
             }
+            filteredData = new ArrayList<>(Arrays.asList(data));
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Произошла ошибка при загрузке данных: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
@@ -99,6 +104,18 @@ public class DogsTableForm extends BaseForm {
 
         model = new DefaultTableModel(data, columns);
         dogsTable.setModel(model);
+        dogsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        dogsTable.getColumnModel().getColumn(1).setMinWidth(0);
+        dogsTable.getColumnModel().getColumn(1).setMaxWidth(0);
+        dogsTable.getColumnModel().getColumn(1).setPreferredWidth(0);
+        dogsTable.getColumnModel().getColumn(4).setMinWidth(0);
+        dogsTable.getColumnModel().getColumn(4).setMaxWidth(0);
+        dogsTable.getColumnModel().getColumn(4).setPreferredWidth(0);
+        dogsTable.getColumnModel().getColumn(5).setMinWidth(0);
+        dogsTable.getColumnModel().getColumn(5).setMaxWidth(0);
+        dogsTable.getColumnModel().getColumn(5).setPreferredWidth(0);
+        // Сделать таблицу нередактируемой
+        dogsTable.setDefaultEditor(Object.class, null);
     }
 
     /**
@@ -109,9 +126,9 @@ public class DogsTableForm extends BaseForm {
         Set<String> judges = new HashSet<>();
         Set<String> places = new HashSet<>();
         for (String[] row : data) {
-            breeds.add(row[2]);
-            judges.add(row[4]);
-            places.add(row[5]);
+            breeds.add(row[3]);
+            judges.add(row[6]);
+            places.add(row[8]);
         }
         dogBreedBox.removeAllItems();
         judgeBox.removeAllItems();
@@ -155,6 +172,10 @@ public class DogsTableForm extends BaseForm {
                 // Если не найдено ничего, выводим сообщение об ошибке
                 JOptionPane.showMessageDialog(null, err.getMessage(), "Внимание", JOptionPane.WARNING_MESSAGE);
             }
+        });
+
+        addCompetitionButton.addActionListener(e -> {
+            new CompetitionAddForm();
         });
 
         loadButton.addActionListener(e -> loadDataFromFile());
@@ -215,7 +236,9 @@ public class DogsTableForm extends BaseForm {
         dogsTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent evt) {
-                if (evt.getClickCount() == 2 && dogsTable.getSelectedRow() != -1) {
+                System.out.println(dogsTable.getSelectedRowCount());
+                System.out.println(evt.getClickCount());
+                if (evt.getClickCount() == 2 && dogsTable.getSelectedRow() != -1 && dogsTable.getSelectedRowCount() == 1) {
                     int row = dogsTable.getSelectedRow();
                     String[] dogData = data[row];
                     Competition competition = competitions.stream().filter(c -> c.getId() == Integer.parseInt(dogData[0])).findFirst().orElse(null);
@@ -224,6 +247,7 @@ public class DogsTableForm extends BaseForm {
                             Dog dog = DbManager.getDog(competition.getDogId());
                             Person judge = DbManager.getJudge(competition.getJudgeId());
                             new CompetitionAddForm(competition.getPlace(), dog, judge, competition.getId());
+                            dispose();
                         } catch (SQLException e) {
                             e.printStackTrace();
                             JOptionPane.showMessageDialog(null, "Произошла ошибка при загрузке данных о собаке или судье: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
@@ -508,14 +532,17 @@ public class DogsTableForm extends BaseForm {
         dogsTable = new JTable();
         scrollPane1.setViewportView(dogsTable);
         final JPanel panel5 = new JPanel();
-        panel5.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel5.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel1.add(panel5, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         loadButton = new JButton();
         loadButton.setText("Загрузить данные");
-        panel5.add(loadButton, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel5.add(loadButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         downloadButton = new JButton();
         downloadButton.setText("Скачать таблицу");
-        panel5.add(downloadButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel5.add(downloadButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        addCompetitionButton = new JButton();
+        addCompetitionButton.setText("Добавить соревнование");
+        panel5.add(addCompetitionButton, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
         mainPanel.add(spacer2, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(50, 50), null, 0, false));
         final Spacer spacer3 = new Spacer();

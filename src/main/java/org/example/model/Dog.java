@@ -46,6 +46,6 @@ public class Dog {
     }
 
     public String toString() {
-        return name + " " + breed;
+        return "[" + id + "] " + name + " " + breed;
     }
 }

@@ -6,9 +6,12 @@ import com.intellij.uiDesigner.core.Spacer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.example.Main;
 import org.example.model.Competition;
 import org.example.model.Dog;
 import org.example.utils.BaseEditForm;
@@ -60,6 +63,13 @@ public class CompetitionAddForm extends BaseEditForm {
     }
 
     @Override
+    protected void cancelClick() {
+        super.cancelClick();
+        new DogsTableForm();
+    }
+    
+
+    @Override
     protected void baseInit() {
         setContentPane(panel1);
         deleteButton.setVisible(true);
@@ -71,7 +81,17 @@ public class CompetitionAddForm extends BaseEditForm {
         setVisible(true);
     }
 
+    @Override
+    public void reload() {
+        initDogs();
+        initJudges();
+    }
+
     private void initJudges() {
+        Person selectedJudge = null;
+        if (this.judge != null) {
+            selectedJudge = this.judge;
+        }
         try {
             judges = DbManager.getJudges();
         } catch (SQLException e) {
@@ -80,6 +100,12 @@ public class CompetitionAddForm extends BaseEditForm {
         }
         judgeBox.removeAllItems();
         judges.forEach(judge -> judgeBox.addItem(judge.toString()));
+        if (selectedJudge != null) {
+            judgeBox.setSelectedItem(selectedJudge.toString());
+        } else if (!judges.isEmpty()) {
+            selectedJudge = judges.getFirst();
+            judgeBox.setSelectedItem(selectedJudge.toString());
+        }
         judgeBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -89,6 +115,10 @@ public class CompetitionAddForm extends BaseEditForm {
     }
 
     private void initDogs() {
+        Dog selectedDog = null;
+        if (this.dog != null) {
+            selectedDog = this.dog;
+        }
         try {
             dogs = DbManager.getDogs();
         } catch (SQLException e) {
@@ -97,6 +127,12 @@ public class CompetitionAddForm extends BaseEditForm {
         }
         dogBox.removeAllItems();
         dogs.forEach(dog -> dogBox.addItem(dog.toString()));
+        if (selectedDog != null) {
+            dogBox.setSelectedItem(selectedDog.toString());
+        } else if (!dogs.isEmpty()) {
+            selectedDog = dogs.getFirst();
+            dogBox.setSelectedItem(selectedDog.toString());
+        }
         dogBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -131,29 +167,48 @@ public class CompetitionAddForm extends BaseEditForm {
     }
 
     private void addJudge() {
-        new PersonAddForm("judge");
+        new PersonAddForm("judge", this);
     }
 
     private void addDog() {
-        new DogAddForm();
+        new DogAddForm(this);
     }
 
     private void editDog() {
-        new DogAddForm(this.dog);
+        System.out.println("editDog");
+        new DogAddForm(this.dog, this);
     }
 
     private void editJudge() {
-        new PersonAddForm(this.judge);
+        new PersonAddForm(this.judge, this);
     }
 
     @Override
     protected void saveClick() {
         try {
             this.place = (int) placeSpinner.getValue();
+            if (this.place == 0) {
+                JOptionPane.showMessageDialog(null, "Необходимо выбрать занятое место", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (this.dog == null) {
+                JOptionPane.showMessageDialog(null, "Необходимо выбрать собаку", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (this.judge == null) {
+                JOptionPane.showMessageDialog(null, "Необходимо выбрать судью", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             if (this.id == 0) {
-                DbManager.addCompetition(new Competition(0, this.place, this.dog.getId(), this.judge.getId(), this.dog.getName(), this.dog.getBreed(), this.dog.getOwner().getName() + " " + this.dog.getOwner().getSurname() + " " + this.dog.getOwner().getMiddlename(), this.judge.getName() + " " + this.judge.getSurname() + " " + this.judge.getMiddlename()));
+                DbManager.addCompetition(new Competition(0, this.place, this.dog.getId(), this.judge.getId(), this.dog.getOwner().getId(), this.dog.getName(), this.dog.getBreed(), this.dog.getOwner().getName() + " " + this.dog.getOwner().getSurname() + " " + this.dog.getOwner().getMiddlename(), this.judge.getName() + " " + this.judge.getSurname() + " " + this.judge.getMiddlename()));
+                JOptionPane.showMessageDialog(null, "Соревнование успешно добавлено", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+                dispose();
+                new DogsTableForm();
             } else {
-                DbManager.updateCompetition(new Competition(this.id, this.place, this.dog.getId(), this.judge.getId(), this.dog.getName(), this.dog.getBreed(), this.dog.getOwner().getName() + " " + this.dog.getOwner().getSurname() + " " + this.dog.getOwner().getMiddlename(), this.judge.getName() + " " + this.judge.getSurname() + " " + this.judge.getMiddlename()));
+                DbManager.updateCompetition(new Competition(this.id, this.place, this.dog.getId(), this.judge.getId(), this.dog.getOwner().getId(), this.dog.getName(), this.dog.getBreed(), this.dog.getOwner().getName() + " " + this.dog.getOwner().getSurname() + " " + this.dog.getOwner().getMiddlename(), this.judge.getName() + " " + this.judge.getSurname() + " " + this.judge.getMiddlename()));
+                JOptionPane.showMessageDialog(null, "Соревнование успешно обновлено", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+                dispose();
+                new DogsTableForm();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -167,6 +222,7 @@ public class CompetitionAddForm extends BaseEditForm {
             DbManager.deleteCompetition(this.id);
             JOptionPane.showMessageDialog(null, "Соревнование успешно удалено", "Успешно", JOptionPane.INFORMATION_MESSAGE);
             dispose();
+            new DogsTableForm();
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Произошла ошибка при удалении соревнования: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);

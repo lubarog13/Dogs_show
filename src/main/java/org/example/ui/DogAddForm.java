@@ -6,10 +6,13 @@ import com.intellij.uiDesigner.core.Spacer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.example.Main;
 import org.example.model.Person;
 import org.example.model.Dog;
 import org.example.utils.BaseEditForm;
@@ -38,14 +41,18 @@ public class DogAddForm extends BaseEditForm {
     private Dog dog;
     private Person owner;
     private List<Person> owners = new ArrayList<>();
+    private BaseEditForm baseEditForm;
 
-    public DogAddForm() {
+    public DogAddForm(BaseEditForm baseEditForm) {
         super();
+        this.dog = new Dog(0, "", "", null);
+        this.baseEditForm = baseEditForm;
         setContentPane(panel1);
         baseInit();
     }
 
-    public DogAddForm(Dog dog) {
+    public DogAddForm(Dog dog, BaseEditForm baseEditForm) {
+        this.baseEditForm = baseEditForm;
         this.dog = dog;
         super();
         titleLabel.setText("Редактирование собаки");
@@ -65,6 +72,10 @@ public class DogAddForm extends BaseEditForm {
     }
 
     private void initOwners() {
+        Person selectedOwner = null;
+        if (this.owner != null) {
+            selectedOwner = this.owner;
+        }
         try {
             owners = DbManager.getOwners();
         } catch (SQLException e) {
@@ -73,6 +84,12 @@ public class DogAddForm extends BaseEditForm {
         }
         ownerBox.removeAllItems();
         owners.forEach(owner -> ownerBox.addItem(owner.toString()));
+        if (selectedOwner != null) {
+            ownerBox.setSelectedItem(selectedOwner.toString());
+        } else if (!owners.isEmpty()) {
+            owner = owners.getFirst();
+            ownerBox.setSelectedItem(owner.toString());
+        }
     }
 
     @Override
@@ -84,7 +101,7 @@ public class DogAddForm extends BaseEditForm {
         if (this.dog != null && this.dog.getBreed() != null) {
             breedField.setText(this.dog.getBreed());
         }
-        if (this.dog != null && this.dog.getOwner() != null) {
+         if (this.dog != null && this.dog.getOwner() != null) {
             ownerBox.setSelectedItem(this.dog.getOwner().toString());
         } else if (this.dog != null && !owners.isEmpty()) {
             this.dog.setOwner(owners.getFirst());
@@ -101,25 +118,36 @@ public class DogAddForm extends BaseEditForm {
     }
 
     private void addOwner() {
-        new PersonAddForm("owner");
+        new PersonAddForm("owner", this);
     }
 
     private void editOwner() {
-        new PersonAddForm(this.owner);
+        new PersonAddForm(this.owner, this);
+    }
+
+    @Override
+    public void reload() {
+        initOwners();
     }
 
     @Override
     protected void saveClick() {
         try {
+            if (this.owner == null) {
+                JOptionPane.showMessageDialog(null, "Необходимо выбрать владельца", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             this.dog.setName(nameField.getText());
             this.dog.setBreed(breedField.getText());
             this.dog.setOwner(this.owner);
             if (this.dog.getId() == 0) {
                 DbManager.addDog(this.dog);
+                JOptionPane.showMessageDialog(null, "Собака успешно добавлена", "Успешно", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 DbManager.updateDog(this.dog);
+                JOptionPane.showMessageDialog(null, "Собака успешно обновлена", "Успешно", JOptionPane.INFORMATION_MESSAGE);
             }
-            JOptionPane.showMessageDialog(null, "Собака успешно добавлена", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+            baseEditForm.reload();
             dispose();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -130,8 +158,13 @@ public class DogAddForm extends BaseEditForm {
     @Override
     protected void deleteClick() {
         try {
+            if (DbManager.haveCompetitionsForDog(this.dog.getId())) {
+                JOptionPane.showMessageDialog(null, "Невозможно удалить собаку, так как она участвует в соревнованиях", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             DbManager.deleteDog(this.dog.getId());
             JOptionPane.showMessageDialog(null, "Собака успешно удалена", "Успешно", JOptionPane.INFORMATION_MESSAGE);
+            baseEditForm.reload();
             dispose();
         } catch (SQLException e) {
             e.printStackTrace();

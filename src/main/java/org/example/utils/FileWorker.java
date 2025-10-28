@@ -100,12 +100,15 @@ public class FileWorker {
                 Node node = nodeList.item(i);
                 Element element = (Element) node;
                 String number = element.getElementsByTagName("number").item(0).getTextContent();
+                String dogId = element.getElementsByTagName("dog_id").item(0).getTextContent();
                 String name = element.getElementsByTagName("name").item(0).getTextContent();
                 String breed = element.getElementsByTagName("breed").item(0).getTextContent();
-                String owner = element.getElementsByTagName("owner").item(0).getTextContent();
-                String judge = element.getElementsByTagName("judge").item(0).getTextContent();
+                String ownerId = element.getElementsByTagName("owner_id").item(0).getTextContent();
+                String judgeId = element.getElementsByTagName("judge_id").item(0).getTextContent();
+                String ownerName = element.getElementsByTagName("owner_name").item(0).getTextContent();
+                String judgeName = element.getElementsByTagName("judge_name").item(0).getTextContent();
                 String place = element.getElementsByTagName("place").item(0).getTextContent();
-                data.add(new String[] {number, name, breed, owner, judge, place});
+                data.add(new String[] {number, dogId, name, breed, ownerId, judgeId, ownerName, judgeName, place});
             }
     }
 
@@ -125,23 +128,32 @@ public class FileWorker {
         for (String[] row : data) {
             Element dog = doc.createElement("dog");
             root.appendChild(dog);
-            Element number = doc.createElement("number");
+            Element number = doc.createElement("id");
             number.appendChild(doc.createTextNode(row[0]));
             dog.appendChild(number);
+            Element dogId = doc.createElement("dog_id");
+            dogId.appendChild(doc.createTextNode(row[1]));
+            dog.appendChild(dogId);
             Element name = doc.createElement("name");
-            name.appendChild(doc.createTextNode(row[1]));
+            name.appendChild(doc.createTextNode(row[2]));
             dog.appendChild(name);
             Element breed = doc.createElement("breed");
-            breed.appendChild(doc.createTextNode(row[2]));
+            breed.appendChild(doc.createTextNode(row[3]));
             dog.appendChild(breed);
-            Element owner = doc.createElement("owner");
-            owner.appendChild(doc.createTextNode(row[3]));
+            Element owner = doc.createElement("owner_id");
+            owner.appendChild(doc.createTextNode(row[4]));
             dog.appendChild(owner);
-            Element judge = doc.createElement("judge");
-            judge.appendChild(doc.createTextNode(row[4]));
+            Element judge = doc.createElement("judge_id");
+            judge.appendChild(doc.createTextNode(row[5]));
             dog.appendChild(judge);
+            Element ownerName = doc.createElement("owner_name");
+            ownerName.appendChild(doc.createTextNode(row[6]));
+            dog.appendChild(ownerName);
+            Element judgeName = doc.createElement("judge_name");
+            judgeName.appendChild(doc.createTextNode(row[7]));
+            dog.appendChild(judgeName);
             Element place = doc.createElement("place");
-            place.appendChild(doc.createTextNode(row[5]));
+            place.appendChild(doc.createTextNode(row[8]));
             dog.appendChild(place);
         }
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
