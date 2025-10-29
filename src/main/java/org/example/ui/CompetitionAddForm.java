@@ -24,6 +24,10 @@ import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.util.Locale;
 
+/**
+ * Форма для добавления и редактирования соревнований.
+ * 
+ */
 public class CompetitionAddForm extends BaseEditForm {
     private JPanel panel1;
     private JLabel titleLabel;
@@ -46,12 +50,23 @@ public class CompetitionAddForm extends BaseEditForm {
     private List<Dog> dogs = new ArrayList<>();
     private List<Person> judges = new ArrayList<>();
 
+    /**
+     * Конструктор для создания нового соревнования.
+     */
     public CompetitionAddForm() {
         super();
         setContentPane(panel1);
         baseInit();
     }
 
+    /**
+     * Конструктор для редактирования существующего соревнования.
+     *
+     * @param place занятое место в соревновании
+     * @param dog собака-участник соревнования
+     * @param judge судья соревнования
+     * @param id идентификатор соревнования
+     */
     public CompetitionAddForm(int place, Dog dog, Person judge, int id) {
         this.dog = dog;
         this.judge = judge;
@@ -62,6 +77,10 @@ public class CompetitionAddForm extends BaseEditForm {
         baseInit();
     }
 
+    /**
+     * 
+     * Закрывает форму и открывает главную форму со списком соревнований.
+     */
     @Override
     protected void cancelClick() {
         super.cancelClick();
@@ -69,6 +88,9 @@ public class CompetitionAddForm extends BaseEditForm {
     }
     
 
+    /**
+     * Инициализирует базовые компоненты формы.
+     */
     @Override
     protected void baseInit() {
         setContentPane(panel1);
@@ -81,12 +103,19 @@ public class CompetitionAddForm extends BaseEditForm {
         setVisible(true);
     }
 
+    /**
+     * Перезагружает списки собак и судей из базы данных.
+     */
     @Override
     public void reload() {
         initDogs();
         initJudges();
     }
 
+    /**
+     * Загружает список судей из базы данных и заполняет выпадающий список.
+     * Сохраняет выбранного судью, если он был установлен ранее.
+     */
     private void initJudges() {
         Person selectedJudge = null;
         if (this.judge != null) {
@@ -114,6 +143,10 @@ public class CompetitionAddForm extends BaseEditForm {
         });
     }
 
+    /**
+     * Загружает список собак из базы данных и заполняет выпадающий список.
+     * Сохраняет выбранную собаку, если она была установлена ранее.
+     */
     private void initDogs() {
         Dog selectedDog = null;
         if (this.dog != null) {
@@ -141,6 +174,10 @@ public class CompetitionAddForm extends BaseEditForm {
         });
     }
 
+    /**
+     * Инициализирует поля формы данными существующего соревнования или пустыми значениями.
+     * Настраивает обработчики событий для кнопок добавления и редактирования.
+     */
     @Override
     protected void initFields() {
         initJudges();
@@ -166,23 +203,41 @@ public class CompetitionAddForm extends BaseEditForm {
         editJudge.addActionListener(e -> editJudge());
     }
 
+    /**
+     * Открывает форму для добавления нового судьи.
+     */
     private void addJudge() {
         new PersonAddForm("judge", this);
     }
 
+    /**
+     * Открывает форму для добавления новой собаки.
+     */
     private void addDog() {
         new DogAddForm(this);
     }
 
+    /**
+     * Открывает форму для редактирования текущей выбранной собаки.
+     */
     private void editDog() {
         System.out.println("editDog");
         new DogAddForm(this.dog, this);
     }
 
+    /**
+     * Открывает форму для редактирования текущего выбранного судьи.
+     */
     private void editJudge() {
         new PersonAddForm(this.judge, this);
     }
 
+    /**
+     * Обрабатывает сохранение данных соревнования.
+     * Добавляет новое соревнование, если id равен 0, иначе обновляет существующее.
+     *
+     * @throws SQLException если произошла ошибка при работе с базой данных
+     */
     @Override
     protected void saveClick() {
         try {
@@ -216,6 +271,11 @@ public class CompetitionAddForm extends BaseEditForm {
         }
     }
 
+    /**
+     * Обрабатывает удаление соревнования из базы данных.
+     *
+     * @throws SQLException если произошла ошибка при работе с базой данных
+     */
     @Override
     protected void deleteClick() {
         try {

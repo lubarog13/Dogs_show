@@ -12,6 +12,10 @@ import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.util.Locale;
 import java.sql.SQLException;
+
+/**
+ * Форма для добавления и редактирования информации о персоне (владельце или судье).
+ */
 public class PersonAddForm extends BaseEditForm {
     private JPanel panel1;
     private JLabel titleLabel;
@@ -25,6 +29,13 @@ public class PersonAddForm extends BaseEditForm {
     private BaseEditForm baseEditForm;
 
     private Person person;
+    
+    /**
+     * Конструктор для создания новой персоны (владельца или судьи).
+     *
+     * @param type тип персоны ("owner" для владельца, "judge" для судьи)
+     * @param baseEditForm родительская форма, которая будет обновлена после сохранения
+     */
     public PersonAddForm(String type, BaseEditForm baseEditForm) {
         this.baseEditForm = baseEditForm;
         super();
@@ -34,6 +45,12 @@ public class PersonAddForm extends BaseEditForm {
         baseInit();
     }
 
+    /**
+     * Конструктор для редактирования существующей персоны.
+     *
+     * @param person объект Person для редактирования
+     * @param baseEditForm родительская форма, которая будет обновлена после сохранения
+     */
     public PersonAddForm(Person person, BaseEditForm baseEditForm) {
         this.baseEditForm = baseEditForm;
         this.person = person;
@@ -42,6 +59,9 @@ public class PersonAddForm extends BaseEditForm {
         baseInit();
     }
 
+    /**
+     * Инициализирует базовые компоненты формы.
+     */
     @Override
     protected void baseInit() {
         setContentPane(panel1);
@@ -54,6 +74,9 @@ public class PersonAddForm extends BaseEditForm {
         setVisible(true);
     }
 
+    /**
+     * Инициализирует поля формы данными существующей персоны или пустыми значениями.
+     */
     @Override
     protected void initFields() {
         if (this.person != null && this.person.getSurname() != null) {
@@ -68,9 +91,27 @@ public class PersonAddForm extends BaseEditForm {
 
     }
 
+    /**
+     * Обрабатывает сохранение данных персоны.
+     * Добавляет новую персону, если id равен 0, иначе обновляет существующую.
+     *
+     * @throws SQLException если произошла ошибка при работе с базой данных
+     */
     @Override
     protected void saveClick() {
         try {
+            if (surnameField.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Необходимо ввести фамилию", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (nameField.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Необходимо ввести имя", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (middlenameField.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Необходимо ввести отчество", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
             this.person.setSurname(surnameField.getText());
             this.person.setName(nameField.getText());
             this.person.setMiddlename(middlenameField.getText());
@@ -96,6 +137,12 @@ public class PersonAddForm extends BaseEditForm {
         }
     }
 
+    /**
+     * Обрабатывает удаление персоны из базы данных.
+     * Проверяет наличие связанных данных (собак у владельца или соревнований у судьи) перед удалением.
+     *
+     * @throws SQLException если произошла ошибка при работе с базой данных
+     */
     @Override
     protected void deleteClick() {
         try {

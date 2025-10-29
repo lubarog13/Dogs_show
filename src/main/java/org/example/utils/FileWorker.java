@@ -56,10 +56,19 @@ public class FileWorker {
     public void readDataFromFile() throws FileNotFoundException, IllegalArgumentException {
         File file = new File(path);
         Scanner scanner = new Scanner(file);
+        String[] headers = scanner.nextLine().split(";");
+        if (headers.length != 8) {
+            scanner.close();
+            throw new IllegalArgumentException("Неверный формат данных в файле");
+        }
+        if (!headers[0].equals("Номер") || !headers[1].equals("ID собаки") || !headers[2].equals("Кличка") || !headers[3].equals("Порода") || !headers[4].equals("ID владельца") || !headers[5].equals("ID судьи") || !headers[6].equals("ФИО владельца") || !headers[7].equals("ФИО судьи") || !headers[8].equals("Занятое место")) {
+            scanner.close();
+            throw new IllegalArgumentException("Неверный формат данных в файле");
+        }
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             String[] row = line.split(";");
-            if (row.length != 6) {
+            if (row.length != 8) {
                 scanner.close();
                 throw new IllegalArgumentException("Неверный формат данных в файле");
             }
@@ -76,6 +85,7 @@ public class FileWorker {
     public void writeDataToFile() throws FileNotFoundException {
         File file = new File(path);
         PrintWriter writer = new PrintWriter(file);
+        writer.println("Номер;ID собаки;Кличка;Порода;ID владельца;ID судьи;ФИО владельца;ФИО судьи;Занятое место");
         for (String[] row : data) {
             writer.println(String.join(";", row));
         }
@@ -99,7 +109,7 @@ public class FileWorker {
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
                 Element element = (Element) node;
-                String number = element.getElementsByTagName("number").item(0).getTextContent();
+                String number = element.getElementsByTagName("id").item(0).getTextContent();
                 String dogId = element.getElementsByTagName("dog_id").item(0).getTextContent();
                 String name = element.getElementsByTagName("name").item(0).getTextContent();
                 String breed = element.getElementsByTagName("breed").item(0).getTextContent();

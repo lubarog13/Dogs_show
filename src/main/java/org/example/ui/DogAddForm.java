@@ -25,6 +25,10 @@ import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.util.Locale;
 
+/**
+ * Форма для добавления и редактирования информации о собаке.
+ * Позволяет вводить кличку, породу и выбирать владельца из списка.
+ */
 public class DogAddForm extends BaseEditForm {
     private JPanel panel1;
     private JLabel titleLabel;
@@ -43,6 +47,11 @@ public class DogAddForm extends BaseEditForm {
     private List<Person> owners = new ArrayList<>();
     private BaseEditForm baseEditForm;
 
+    /**
+     * Конструктор для создания новой собаки.
+     *
+     * @param baseEditForm родительская форма, которая будет обновлена после сохранения
+     */
     public DogAddForm(BaseEditForm baseEditForm) {
         super();
         this.dog = new Dog(0, "", "", null);
@@ -51,6 +60,12 @@ public class DogAddForm extends BaseEditForm {
         baseInit();
     }
 
+    /**
+     * Конструктор для редактирования существующей собаки.
+     *
+     * @param dog объект Dog для редактирования
+     * @param baseEditForm родительская форма, которая будет обновлена после сохранения
+     */
     public DogAddForm(Dog dog, BaseEditForm baseEditForm) {
         this.baseEditForm = baseEditForm;
         this.dog = dog;
@@ -59,6 +74,9 @@ public class DogAddForm extends BaseEditForm {
         baseInit();
     }
 
+    /**
+     * Инициализирует базовые компоненты формы.
+     */
     @Override
     protected void baseInit() {
         setContentPane(panel1);
@@ -71,6 +89,10 @@ public class DogAddForm extends BaseEditForm {
         setVisible(true);
     }
 
+    /**
+     * Загружает список владельцев из базы данных и заполняет выпадающий список.
+     * Сохраняет выбранного владельца, если он был установлен ранее.
+     */
     private void initOwners() {
         Person selectedOwner = null;
         if (this.owner != null) {
@@ -92,6 +114,10 @@ public class DogAddForm extends BaseEditForm {
         }
     }
 
+    /**
+     * Инициализирует поля формы.
+     * Настраивает обработчики событий для кнопок добавления и редактирования владельца.
+     */
     @Override
     protected void initFields() {
         initOwners();
@@ -117,24 +143,49 @@ public class DogAddForm extends BaseEditForm {
         editOwnerButton.addActionListener(e -> editOwner());
     }
 
+    /**
+     * Открывает форму для добавления нового владельца.
+     */
     private void addOwner() {
         new PersonAddForm("owner", this);
     }
 
+    /**
+     * Открывает форму для редактирования текущего выбранного владельца.
+     */
     private void editOwner() {
         new PersonAddForm(this.owner, this);
     }
 
+    /**
+     * Перезагружает список владельцев из базы данных.
+     * Вызывается после изменений в данных владельцев.
+     */
     @Override
     public void reload() {
         initOwners();
     }
 
+    /**
+     * Обрабатывает сохранение данных собаки.
+     * Добавляет новую собаку, если id равен 0, иначе обновляет существующую.
+     * Проверяет наличие выбранного владельца перед сохранением.
+     *
+     * @throws SQLException если произошла ошибка при работе с базой данных
+     */
     @Override
     protected void saveClick() {
         try {
             if (this.owner == null) {
                 JOptionPane.showMessageDialog(null, "Необходимо выбрать владельца", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (nameField.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Необходимо ввести кличку", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (breedField.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Необходимо ввести породу", "Ошибка", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             this.dog.setName(nameField.getText());
@@ -155,6 +206,12 @@ public class DogAddForm extends BaseEditForm {
         }
     }
 
+    /**
+     * Обрабатывает удаление собаки из базы данных.
+     * Проверяет наличие соревнований с участием собаки перед удалением.
+     *
+     * @throws SQLException если произошла ошибка при работе с базой данных
+     */
     @Override
     protected void deleteClick() {
         try {

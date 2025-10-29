@@ -1,6 +1,7 @@
 package org.example.ui;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.StyleContext;
@@ -20,6 +21,7 @@ import org.xml.sax.SAXException;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
@@ -58,7 +60,7 @@ public class DogsTableForm extends BaseForm {
 
 
     /**
-     *
+     * Конструктор класса
      */
     public DogsTableForm() {
         super(700, 500, true);
@@ -76,23 +78,31 @@ public class DogsTableForm extends BaseForm {
     private void initData() {
         try {
             this.competitions = DbManager.getCompetitions();
-            data = new String[competitions.size()][columns.length];
-            for (int i = 0; i < competitions.size(); i++) {
-                data[i][0] = String.valueOf(competitions.get(i).getId());
-                data[i][1] = String.valueOf(competitions.get(i).getDogId());
-                data[i][2] = competitions.get(i).getDogName();
-                data[i][3] = competitions.get(i).getDogBreed();
-                data[i][4] = String.valueOf(competitions.get(i).getOwnerId());
-                data[i][5] = String.valueOf(competitions.get(i).getJudgeId());
-                data[i][6] = competitions.get(i).getOwnerName();
-                data[i][7] = competitions.get(i).getJudgeName();
-                data[i][8] = String.valueOf(competitions.get(i).getPlace());
-            }
-            filteredData = new ArrayList<>(Arrays.asList(data));
+            setDataFromCompetitions();
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Произошла ошибка при загрузке данных: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    /**
+     * Метод для установки данных из соревнований
+     */
+
+    private void setDataFromCompetitions() {
+        data = new String[competitions.size()][columns.length];
+        for (int i = 0; i < competitions.size(); i++) {
+            data[i][0] = String.valueOf(competitions.get(i).getId());
+            data[i][1] = String.valueOf(competitions.get(i).getDogId());
+            data[i][2] = competitions.get(i).getDogName();
+            data[i][3] = competitions.get(i).getDogBreed();
+            data[i][4] = String.valueOf(competitions.get(i).getOwnerId());
+            data[i][5] = String.valueOf(competitions.get(i).getJudgeId());
+            data[i][6] = competitions.get(i).getOwnerName();
+            data[i][7] = competitions.get(i).getJudgeName();
+            data[i][8] = String.valueOf(competitions.get(i).getPlace());
+        }
+        filteredData = new ArrayList<>(Arrays.asList(data));
     }
 
     /**
@@ -129,6 +139,7 @@ public class DogsTableForm extends BaseForm {
             breeds.add(row[3]);
             judges.add(row[6]);
             places.add(row[8]);
+            System.out.println(row[8]);
         }
         dogBreedBox.removeAllItems();
         judgeBox.removeAllItems();
@@ -320,10 +331,30 @@ public class DogsTableForm extends BaseForm {
      * Метод для загрузки данных из файла
      */
     private void loadDataFromFile() {
-        FileDialog fileDialog = new FileDialog(this, "Выберите файл", FileDialog.LOAD);
-        fileDialog.setVisible(true);
-        String path = fileDialog.getDirectory() + fileDialog.getFile();
-        if (!path.equals("nullnull")) {
+        Object[] options = {"XML", "CSV"};
+        int choice = JOptionPane.showOptionDialog(this, "Выберите формат файла", "Выбор формата файла", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        JFileChooser fileChooser = new JFileChooser();
+        if (choice == 0) {
+            fileChooser.setFileFilter(new FileNameExtensionFilter("XML файлы", "xml"));
+        } else if (choice == 1) {
+            fileChooser.setFileFilter(new FileNameExtensionFilter("CSV файлы", "csv"));
+        } else {
+            return;
+        }
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setDialogTitle("Выберите файл для загрузки");
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        int result = fileChooser.showOpenDialog(this);
+        String path;
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            path = file.getAbsolutePath();
+        } else {
+            path = null;
+        }
+        if (path == null) {
+            return;
+        }
             Object mutex = new Object();
             Thread[] threads = new Thread[2];
             AtomicBoolean loaded = new AtomicBoolean(false);
@@ -332,8 +363,16 @@ public class DogsTableForm extends BaseForm {
                 synchronized (mutex) {
                     try {
                         FileWorker fileWorker = new FileWorker(path);
-                        fileWorker.parseXMLData();
-                        data = fileWorker.getData().toArray(new String[0][]);
+                        if (choice == 0) {
+                            fileWorker.parseXMLData();
+                        } else {
+                            fileWorker.readDataFromFile();
+                        }
+                        List<String[]> newData = fileWorker.getData();
+                        for (String[] row : newData) {
+                            setCompetitionFromData(row);
+                        }
+                        setDataFromCompetitions();
                         model.setDataVector(data, columns);
                         setFilters();
                         loaded.set(true);
@@ -345,6 +384,7 @@ public class DogsTableForm extends BaseForm {
                         );
                         mutex.notifyAll();
                     } catch (IllegalArgumentException | ParserConfigurationException e) {
+                        e.printStackTrace();
                         SwingUtilities.invokeLater(() ->
                                 JOptionPane.showMessageDialog(null, "Неверный формат данных в файле\n Требуется XML файл", "Внимание", JOptionPane.WARNING_MESSAGE)
                         );
@@ -388,6 +428,51 @@ public class DogsTableForm extends BaseForm {
             } catch (InterruptedException e) {
                 JOptionPane.showMessageDialog(null, "Ошибка при загрузке данных из файла", "Внимание", JOptionPane.WARNING_MESSAGE);
             }
+    }
+
+    /**
+     * Метод для установки соревнования из данных
+     * @param data
+     */
+    private void setCompetitionFromData(String[] data) {
+        Competition newCompetition = new Competition(Integer.parseInt(data[0]), Integer.parseInt(data[8]), Integer.parseInt(data[1]), Integer.parseInt(data[5]), Integer.parseInt(data[4]), data[2], data[3], data[6], data[7]);
+        Person newJudge = new Person(Integer.parseInt(data[5]), data[7].split(" ")[0], data[7].split(" ")[1], data[7].split(" ")[2], "judge");
+        Person newOwner = new Person(Integer.parseInt(data[4]), data[6].split(" ")[0], data[6].split(" ")[1], data[6].split(" ")[2], "owner");
+        Dog newDog = new Dog(Integer.parseInt(data[1]), data[2], data[3], newOwner);
+        try {
+            
+        Person existingJudge = DbManager.getJudge(newJudge.getId());
+            if (existingJudge == null) {    
+                DbManager.addJudge(newJudge);
+            } else if (!Objects.equals(existingJudge.getName(), newJudge.getName()) || !Objects.equals(existingJudge.getSurname(), newJudge.getSurname()) || !Objects.equals(existingJudge.getMiddlename(), newJudge.getMiddlename())) {
+                DbManager.updateJudge(newJudge);
+            }
+            Person existingOwner = DbManager.getOwner(newOwner.getId());
+            if (existingOwner == null) {
+                DbManager.addOwner(newOwner);
+            } else if (!Objects.equals(existingOwner.getName(), newOwner.getName()) || !Objects.equals(existingOwner.getSurname(), newOwner.getSurname()) || !Objects.equals(existingOwner.getMiddlename(), newOwner.getMiddlename())) {
+                DbManager.updateOwner(newOwner);
+            }
+            Dog existingDog = DbManager.getDog(newDog.getId());
+            if (existingDog == null) {
+                DbManager.addDog(newDog);
+            } else if (!Objects.equals(existingDog.getName(), newDog.getName()) || !Objects.equals(existingDog.getBreed(), newDog.getBreed()) || existingDog.getOwner().getId() != newDog.getOwner().getId()) {
+                DbManager.updateDog(newDog);
+            }
+            Competition existingCompetition = DbManager.getCompetitionWithId(newCompetition.getId());
+            if (existingCompetition == null) {
+                DbManager.addCompetition(newCompetition);
+            } else if (existingCompetition.getPlace() != newCompetition.getPlace() || existingCompetition.getDogId() != newCompetition.getDogId() || existingCompetition.getJudgeId() != newCompetition.getJudgeId()) {
+                DbManager.updateCompetition(newCompetition);
+            }
+            if (competitions.stream().anyMatch(c -> c.getId() == newCompetition.getId())) {
+                competitions.replaceAll(c -> c.getId() == newCompetition.getId() ? newCompetition : c);
+            } else {
+                competitions.add(newCompetition);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Произошла ошибка при добавлении данных в базу данных: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -395,27 +480,53 @@ public class DogsTableForm extends BaseForm {
      * Метод для сохранения данных в файл
      */
     private void downloadDataToFile() {
-
-        FileDialog fileDialog = new FileDialog(this, "Выберите файл", FileDialog.SAVE);
-        fileDialog.setVisible(true);
-        String path = fileDialog.getDirectory() + fileDialog.getFile();
-        if (path.equals("nullnull")) {
+        Object[] options = {"XML", "CSV"};
+        int choice = JOptionPane.showOptionDialog(this, "Выберите формат файла", "Выбор формата файла", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        JFileChooser fileChooser = new JFileChooser();
+        if (choice == 0) {
+            fileChooser.setFileFilter(new FileNameExtensionFilter("XML файлы", "xml"));
+        } else if (choice == 1) {
+            fileChooser.setFileFilter(new FileNameExtensionFilter("CSV файлы", "csv"));
+        } else {
             return;
+        }
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setDialogTitle("Выберите файл для сохранения");
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        int result = fileChooser.showSaveDialog(this);
+        String path;
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            path = file.getAbsolutePath();
+        } else {
+            path = null;
+        }
+        if (path == null) {
+            return;
+        }
+        if (!path.endsWith(choice == 0 ? ".xml" : ".csv")) {
+            path += choice == 0 ? ".xml" : ".csv";
         }
         Object mutex = new Object();
         Thread[] threads = new Thread[2];
         AtomicBoolean loaded = new AtomicBoolean(false);
         AtomicBoolean loadedError = new AtomicBoolean(false);
+        String finalPath = path;
+        System.out.println(finalPath);
         threads[0] = new Thread(() -> {
             synchronized (mutex) {
                 try {
-                    FileWorker fileWorker = new FileWorker(path);
+                    FileWorker fileWorker = new FileWorker(finalPath);
                     fileWorker.setData(filteredData);
-                    fileWorker.writeXMLData();
+                    if (choice == 0) {
+                        fileWorker.writeXMLData();
+                    } else {
+                        fileWorker.writeDataToFile();
+                    }
                     loaded.set(true);
                     mutex.notifyAll();
                     SwingUtilities.invokeLater(() ->
-                            JOptionPane.showMessageDialog(null, "Данные в файл " + path + " успешно сохранены", "Данные сохранены", JOptionPane.INFORMATION_MESSAGE)
+                            JOptionPane.showMessageDialog(null, "Данные в файл " + finalPath + " успешно сохранены", "Данные сохранены", JOptionPane.INFORMATION_MESSAGE)
                     );
                 } catch (ParserConfigurationException | SAXException | IOException | TransformerException e) {
                     loadedError.set(true);
@@ -426,9 +537,10 @@ public class DogsTableForm extends BaseForm {
                 }
             }
         });
+        String finalPath1 = path;
         threads[1] = new Thread(() -> {
             synchronized (mutex) {
-                Logger.log("Сохраняю данные в файл " + path);
+                Logger.log("Сохраняю данные в файл " + finalPath1);
                 while (!loaded.get() && !loadedError.get()) {
                     try {
                         Thread.sleep(100);
@@ -437,10 +549,10 @@ public class DogsTableForm extends BaseForm {
                     }
                 }
                 if (loadedError.get()) {
-                    Logger.log("Ошибка при сохранении данных в файл " + path);
+                    Logger.log("Ошибка при сохранении данных в файл " + finalPath1);
                     mutex.notifyAll();
                 } else {
-                    Logger.log("Данные в файл " + path + " успешно сохранены");
+                    Logger.log("Данные в файл " + finalPath1 + " успешно сохранены");
                     mutex.notifyAll();
                 }
             }

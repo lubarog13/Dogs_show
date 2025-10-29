@@ -11,16 +11,27 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Главный класс программы, вызов окна формы
+ * Главный класс программы для управления выставкой собак.
+ * Инициализирует приложение и создает главное окно формы.
  */
 public class Main {
 
+    /**
+     * Путь к файлу журнала событий приложения.
+     */
     public static String LOG_PATH = "/tmp/log_dogs.txt";
+    
+    /**
+     * Логгер для записи событий приложения.
+     */
     public static Logger logger = new Logger(LOG_PATH);
 
     /**
-     * @param args
-     * @throws Exception
+     * Точка входа в приложение.
+     * Устанавливает системный Look and Feel и создает главное окно формы.
+     *
+     * @param args аргументы командной строки (не используются)
+     * @throws Exception если произошла ошибка при инициализации приложения
      */
         public static void main(String[] args) throws Exception {
             try {
@@ -32,6 +43,11 @@ public class Main {
             new DogsTableForm();
         }
 
+        /**
+         * Получает соединение с базой данных MySQL.
+         *
+         * @return объект Connection для работы с базой данных, или null при ошибке
+         */
         public static Connection getConnection() {
             try {
                 return DriverManager.getConnection("jdbc:mysql://localhost:3306/dogs_show", "new_cybrid", "1234");
@@ -39,5 +55,17 @@ public class Main {
                 e.printStackTrace();
             }
             return null;
+        }
+
+        /**
+         * Закрывает соединение с базой данных.
+         *
+         * @param connection соединение с базой данных для закрытия
+         * @throws SQLException если произошла ошибка при закрытии соединения
+         */
+        public static void closeConnection(Connection connection) throws SQLException {
+            if (connection != null) {
+                connection.close();
+            }
         }
 }
