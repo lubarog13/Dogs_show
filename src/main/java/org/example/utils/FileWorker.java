@@ -57,8 +57,9 @@ public class FileWorker {
         File file = new File(path);
         Scanner scanner = new Scanner(file);
         String[] headers = scanner.nextLine().split(";");
-        if (headers.length != 8) {
+        if (headers.length != 9) {
             scanner.close();
+            System.out.println(headers.length);
             throw new IllegalArgumentException("Неверный формат данных в файле");
         }
         if (!headers[0].equals("Номер") || !headers[1].equals("ID собаки") || !headers[2].equals("Кличка") || !headers[3].equals("Порода") || !headers[4].equals("ID владельца") || !headers[5].equals("ID судьи") || !headers[6].equals("ФИО владельца") || !headers[7].equals("ФИО судьи") || !headers[8].equals("Занятое место")) {
@@ -68,7 +69,7 @@ public class FileWorker {
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             String[] row = line.split(";");
-            if (row.length != 8) {
+            if (row.length != 9) {
                 scanner.close();
                 throw new IllegalArgumentException("Неверный формат данных в файле");
             }

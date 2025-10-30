@@ -137,9 +137,8 @@ public class DogsTableForm extends BaseForm {
         Set<String> places = new HashSet<>();
         for (String[] row : data) {
             breeds.add(row[3]);
-            judges.add(row[6]);
+            judges.add(row[7]);
             places.add(row[8]);
-            System.out.println(row[8]);
         }
         dogBreedBox.removeAllItems();
         judgeBox.removeAllItems();
@@ -247,8 +246,6 @@ public class DogsTableForm extends BaseForm {
         dogsTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent evt) {
-                System.out.println(dogsTable.getSelectedRowCount());
-                System.out.println(evt.getClickCount());
                 if (evt.getClickCount() == 2 && dogsTable.getSelectedRow() != -1 && dogsTable.getSelectedRowCount() == 1) {
                     int row = dogsTable.getSelectedRow();
                     String[] dogData = data[row];
@@ -300,16 +297,16 @@ public class DogsTableForm extends BaseForm {
         // Фильтрация данных
         List<String[]> filteredData = new ArrayList<>();
         for (String[] row : data) {
-            if (!judge.equals("Все судьи") && !judge.equals(row[4])) {
+            if (!judge.equals("Все судьи") && !judge.equals(row[7])) {
                 continue;
             }
-            if (!breed.equals("Все породы") && !breed.equals(row[2])) {
+            if (!breed.equals("Все породы") && !breed.equals(row[3])) {
                 continue;
             }
-            if (Integer.parseInt(row[5]) > place) {
+            if (Integer.parseInt(row[8]) > place) {
                 continue;
             }
-            if (!searchText.isEmpty() && !searchText.equals("введите текст....") && !Objects.equals(row[0], searchText.trim()) && !row[1].toLowerCase().contains(searchText) && !row[2].toLowerCase().contains(searchText) && !row[3].toLowerCase().contains(searchText) && !row[4].toLowerCase().contains(searchText)) {
+            if (!searchText.isEmpty() && !searchText.equals("введите текст....") && !Objects.equals(row[0].toString(), searchText.trim()) && !row[2].toLowerCase().contains(searchText) && !row[3].toLowerCase().contains(searchText) && !row[6].toLowerCase().contains(searchText) && !row[7].toLowerCase().contains(searchText)) {
                 continue;
             }
             filteredData.add(row);
@@ -386,11 +383,19 @@ public class DogsTableForm extends BaseForm {
                     } catch (IllegalArgumentException | ParserConfigurationException e) {
                         e.printStackTrace();
                         SwingUtilities.invokeLater(() ->
-                                JOptionPane.showMessageDialog(null, "Неверный формат данных в файле\n Требуется XML файл", "Внимание", JOptionPane.WARNING_MESSAGE)
+                                JOptionPane.showMessageDialog(null, "Неверный формат данных в файле\n Требуется" + (choice == 0 ? " XML файл" : " CSV файл"), "Внимание", JOptionPane.WARNING_MESSAGE)
+                        );
+                        loadedError.set(true);
+                        mutex.notifyAll();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                        SwingUtilities.invokeLater(() ->
+                                JOptionPane.showMessageDialog(null, "Произошла ошибка при добавлении данных в базу данных: " + e.getMessage(), "Ошибка", JOptionPane.WARNING_MESSAGE)
                         );
                         loadedError.set(true);
                         mutex.notifyAll();
                     }
+
                 }
                 if (loaded.get()) {
                     SwingUtilities.invokeLater(() ->
@@ -433,14 +438,14 @@ public class DogsTableForm extends BaseForm {
     /**
      * Метод для установки соревнования из данных
      * @param data
+     * @throws SQLException
      */
-    private void setCompetitionFromData(String[] data) {
+    private void setCompetitionFromData(String[] data) throws SQLException {
         Competition newCompetition = new Competition(Integer.parseInt(data[0]), Integer.parseInt(data[8]), Integer.parseInt(data[1]), Integer.parseInt(data[5]), Integer.parseInt(data[4]), data[2], data[3], data[6], data[7]);
         Person newJudge = new Person(Integer.parseInt(data[5]), data[7].split(" ")[0], data[7].split(" ")[1], data[7].split(" ")[2], "judge");
         Person newOwner = new Person(Integer.parseInt(data[4]), data[6].split(" ")[0], data[6].split(" ")[1], data[6].split(" ")[2], "owner");
         Dog newDog = new Dog(Integer.parseInt(data[1]), data[2], data[3], newOwner);
-        try {
-            
+
         Person existingJudge = DbManager.getJudge(newJudge.getId());
             if (existingJudge == null) {    
                 DbManager.addJudge(newJudge);
@@ -470,10 +475,6 @@ public class DogsTableForm extends BaseForm {
             } else {
                 competitions.add(newCompetition);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Произошла ошибка при добавлении данных в базу данных: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
-        }
     }
 
     /**
@@ -512,7 +513,6 @@ public class DogsTableForm extends BaseForm {
         AtomicBoolean loaded = new AtomicBoolean(false);
         AtomicBoolean loadedError = new AtomicBoolean(false);
         String finalPath = path;
-        System.out.println(finalPath);
         threads[0] = new Thread(() -> {
             synchronized (mutex) {
                 try {

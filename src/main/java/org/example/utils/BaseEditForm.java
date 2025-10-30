@@ -25,7 +25,7 @@ public abstract class BaseEditForm extends BaseForm{
      * Конструктор базовой формы редактирования.
      */
     public BaseEditForm() {
-        super(600, 500, false);
+        super(800, 600, false);
     }
 
     /**
